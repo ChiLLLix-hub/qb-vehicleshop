@@ -144,7 +144,12 @@ RegisterNetEvent('qb-vehicleshop:server:swapVehicle', function(data)
     local src = source
     TriggerClientEvent('qb-vehicleshop:client:swapVehicle', -1, data)
     Wait(1500)                                                -- let new car spawn
-    TriggerClientEvent('qb-vehicleshop:client:homeMenu', src) -- reopen main menu
+    -- Reopen the vehicle list menu instead of home menu for better UX
+    TriggerClientEvent('qb-vehicleshop:client:openVehCats', src, {
+        catName = data.catName,
+        make = data.make,
+        onecat = data.onecat
+    })
 end)
 
 -- Send customer for test drive

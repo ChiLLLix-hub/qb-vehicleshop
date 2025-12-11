@@ -615,7 +615,10 @@ RegisterNetEvent('qb-vehicleshop:client:openVehCats', function(data)
                                 args = {
                                     toVehicle = v.model,
                                     ClosestVehicle = ClosestVehicle,
-                                    ClosestShop = insideShop
+                                    ClosestShop = insideShop,
+                                    catName = data.catName,
+                                    make = data.make,
+                                    onecat = data.onecat
                                 }
                             }
                         }
@@ -632,7 +635,10 @@ RegisterNetEvent('qb-vehicleshop:client:openVehCats', function(data)
                         args = {
                             toVehicle = v.model,
                             ClosestVehicle = ClosestVehicle,
-                            ClosestShop = insideShop
+                            ClosestShop = insideShop,
+                            catName = data.catName,
+                            make = data.make,
+                            onecat = data.onecat
                         }
                     }
                 }
