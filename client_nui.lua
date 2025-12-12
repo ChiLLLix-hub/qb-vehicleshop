@@ -1,5 +1,6 @@
 -- NUI Control Functions
 local nuiOpen = false
+local currentCategoryContext = {}  -- Track category/make context for vehicle selection
 
 -- Open NUI with vehicle data
 function OpenVehicleNUI(vehicleData)
@@ -36,9 +37,13 @@ function OpenCategoryNUI(categories)
 end
 
 -- Open vehicle list
-function OpenVehicleListNUI(vehicles)
+function OpenVehicleListNUI(vehicles, categoryContext)
     if nuiOpen then return end
     nuiOpen = true
+    -- Store category context for vehicle selection
+    if categoryContext then
+        currentCategoryContext = categoryContext
+    end
     SetNuiFocus(true, true)
     SendNUIMessage({
         action = 'setVisible',
@@ -170,7 +175,10 @@ RegisterNUICallback('selectVehicle', function(data, cb)
         TriggerServerEvent('qb-vehicleshop:server:swapVehicle', {
             toVehicle = data.vehicle.model,
             ClosestVehicle = ClosestVehicle,
-            ClosestShop = insideShop
+            ClosestShop = insideShop,
+            catName = currentCategoryContext.catName,
+            make = currentCategoryContext.make,
+            onecat = currentCategoryContext.onecat
         })
     end
     cb('ok')

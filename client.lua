@@ -546,7 +546,12 @@ RegisterNetEvent('qb-vehicleshop:client:openVehCats', function(data)
         end
     end
     
-    OpenVehicleListNUI(vehicles)
+    -- Pass category context to NUI
+    OpenVehicleListNUI(vehicles, {
+        catName = data.catName,
+        make = data.make,
+        onecat = data.onecat
+    })
 end)
 
 RegisterNetEvent('qb-vehicleshop:client:vehMakes', function()
