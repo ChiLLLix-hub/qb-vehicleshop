@@ -3,8 +3,9 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { formatCurrency } from '../utils/misc';
 
 const FinanceModal = ({ vehicle, onSubmit, onClose, config }) => {
+  const DEFAULT_PAYMENT_AMOUNT = 12;
   const [downPayment, setDownPayment] = useState(config?.minimumDown || 10);
-  const [paymentAmount, setPaymentAmount] = useState(12);
+  const [paymentAmount, setPaymentAmount] = useState(DEFAULT_PAYMENT_AMOUNT);
 
   const vehiclePrice = vehicle?.price || 0;
   const downPaymentAmount = (vehiclePrice * downPayment) / 100;

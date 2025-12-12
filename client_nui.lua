@@ -151,10 +151,9 @@ end)
 RegisterNUICallback('selectCategory', function(data, cb)
     CloseNUI()
     if data.category then
-        -- Check if it's a make or category based on context
-        -- If Config.FilterByMake is true and we're selecting from makes menu, this is a make
-        -- Otherwise it's a category
-        if data.category.icon == '🏢' then
+        -- Check if it's a make or category based on type
+        -- Makes will have a 'type' property set to 'make'
+        if data.category.type == 'make' then
             -- This is a make/brand
             TriggerEvent('qb-vehicleshop:client:vehCategories', { make = data.category.id })
         else

@@ -9,6 +9,11 @@ local ClosestVehicle = 1
 local zones = {}
 local insideShop, tempShop = nil, nil
 
+-- Constants
+local Keys = {
+    E = 38  -- Interact key
+}
+
 -- Handlers
 AddEventHandler('QBCore:Client:OnPlayerLoaded', function()
     PlayerData = QBCore.Functions.GetPlayerData()
@@ -240,7 +245,7 @@ local function createVehZones(shopName, entity)
                     -- Show NUI instead of qb-menu header
                     CreateThread(function()
                         while insideShop do
-                            if IsControlJustPressed(0, 38) then -- E key
+                            if IsControlJustPressed(0, Keys.E) then
                                 OpenVehicleNUI(getCurrentVehicleData())
                             end
                             Wait(0)
@@ -656,7 +661,8 @@ RegisterNetEvent('qb-vehicleshop:client:vehMakes', function()
         makes[#makes + 1] = {
             id = v,
             name = v,
-            icon = '🏢'
+            icon = '🏢',
+            type = 'make'  -- Explicitly mark as make for NUI callback
         }
     end
     
