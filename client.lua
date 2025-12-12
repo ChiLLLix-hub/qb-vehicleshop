@@ -188,6 +188,9 @@ local function startTestDriveTimer(testDriveTime, prevCoords)
                     inTestDrive = false
                     SetEntityCoords(PlayerPedId(), prevCoords)
                     QBCore.Functions.Notify(Lang:t('general.testdrive_complete'))
+                    if testDriveZone then
+                        testDriveZone:destroy()
+                    end
                 end
                 drawTxt(Lang:t('general.testdrive_timer') .. math.ceil(testDriveTime - secondsLeft / 1000), 4, 0.5, 0.93, 0.50, 255, 255, 255, 180)
             end
@@ -615,7 +618,10 @@ RegisterNetEvent('qb-vehicleshop:client:openVehCats', function(data)
                                 args = {
                                     toVehicle = v.model,
                                     ClosestVehicle = ClosestVehicle,
-                                    ClosestShop = insideShop
+                                    ClosestShop = insideShop,
+                                    catName = data.catName,
+                                    make = data.make,
+                                    onecat = data.onecat
                                 }
                             }
                         }
@@ -632,7 +638,10 @@ RegisterNetEvent('qb-vehicleshop:client:openVehCats', function(data)
                         args = {
                             toVehicle = v.model,
                             ClosestVehicle = ClosestVehicle,
-                            ClosestShop = insideShop
+                            ClosestShop = insideShop,
+                            catName = data.catName,
+                            make = data.make,
+                            onecat = data.onecat
                         }
                     }
                 }
