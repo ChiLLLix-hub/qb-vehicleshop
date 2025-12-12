@@ -1,5 +1,24 @@
 # qb-vehicleshop
 
+## 🎨 New Modern NUI!
+
+This resource now features a **modern, responsive NUI** built with React.js, Vite, and Tailwind CSS!
+
+### ✨ New Features
+* **Beautiful glassmorphism UI** - Modern, clean design
+* **Responsive layout** - Works on any screen size
+* **Interactive finance calculator** - Real-time payment calculations with sliders
+* **Smooth animations** - Powered by Framer Motion
+* **Test drive timer overlay** - Clean countdown display
+* **Category & vehicle grids** - Easy browsing with card layouts
+* **ESC key support** - Quick UI dismissal
+
+📖 **[Read the full NUI documentation →](NUI_DOCUMENTATION.md)**
+
+---
+
+## Original Features
+
 **Test Drives:**
 * Configurable time
 * Returns player once time is up
@@ -20,7 +39,13 @@
 **Planned Updates**
 * QB-Phone support to make payments
 
-**Preview header when near a vehicle at the public dealership:**
+## Screenshots
+
+**Modern Vehicle Card:**
+
+The new NUI features a beautiful vehicle card with glassmorphism effects, displaying vehicle information and action buttons.
+
+**Original Preview header when near a vehicle at the public dealership:**
 
 ![image](https://user-images.githubusercontent.com/57848836/138773379-836be2a6-a800-47a4-8037-84d9052a964c.png)
 
@@ -55,16 +80,18 @@
 
 ### Dependencies:
 
-**[PolyZone](https://github.com/qbcore-framework/PolyZone)**
+**[PolyZone](https://github.com/qbcore-framework/PolyZone)** - Required
 
 * You need to create new PolyZones if you want to create a new dealership or move default locations to another area. After you create the new PolyZones, add them to the Config.Shops > [Shape]
 
 * Here's a Wiki on how to create new PolyZone:
 https://github.com/mkafrin/PolyZone/wiki/Using-the-creation-script
 
-**[qb-menu](https://github.com/qbcore-framework/qb-menu)**
+**[qb-menu](https://github.com/qbcore-framework/qb-menu)** - Required (for finance management)
 
-**[qb-input](https://github.com/qbcore-framework/qb-input)**
+**[qb-input](https://github.com/qbcore-framework/qb-input)** - Required (for some dialogs)
+
+**Note:** The main vehicle shopping interface now uses the built-in React NUI instead of qb-menu. The qb-menu and qb-input dependencies are still required for finance zone interactions and owned vehicle management.
 
 ```lua
 Config = {}
