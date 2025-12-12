@@ -198,6 +198,20 @@ local function startTestDriveTimer(testDriveTime, prevCoords)
     CreateThread(function()
         Wait(2000) -- Avoids the condition to run before entering vehicle
         while inTestDrive do
+            -- Check for E key press to end test drive early
+            if IsControlJustPressed(0, Keys.E) then
+                TriggerServerEvent('qb-vehicleshop:server:deleteVehicle', testDriveVeh)
+                testDriveVeh = 0
+                inTestDrive = false
+                SetEntityCoords(PlayerPedId(), prevCoords)
+                QBCore.Functions.Notify(Lang:t('general.testdrive_complete'))
+                EndTestDriveNUI()
+                if testDriveZone then
+                    testDriveZone:destroy()
+                end
+                break
+            end
+            
             if GetGameTimer() < gameTimer + tonumber(1000 * testDriveTime) then
                 local secondsLeft = GetGameTimer() - gameTimer
                 if secondsLeft >= tonumber(1000 * testDriveTime) - 20 or GetPedInVehicleSeat(NetToVeh(testDriveVeh), -1) ~= PlayerPedId() then

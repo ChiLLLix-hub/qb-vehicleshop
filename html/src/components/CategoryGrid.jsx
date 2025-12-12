@@ -47,18 +47,15 @@ const CategoryGrid = ({ categories, onSelect, onClose, onBack }) => {
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: index * 0.03 }}
               onClick={() => onSelect(category)}
-              className="w-full glass rounded-xl p-4 hover:bg-white/20 transition-all duration-200 group text-left"
+              className="w-full glass rounded-xl p-3 hover:bg-white/20 transition-all duration-200 group text-left"
             >
-              <div className="flex items-center gap-3">
-                <div className="text-2xl">{category.icon || '🚗'}</div>
-                <div className="flex-1">
-                  <h3 className="text-lg font-semibold text-white group-hover:text-primary-400 transition-colors">
-                    {category.name}
-                  </h3>
-                  {category.count && (
-                    <p className="text-gray-400 text-xs">{category.count} vehicles</p>
-                  )}
-                </div>
+              <div>
+                <h3 className="text-base font-semibold text-white group-hover:text-primary-400 transition-colors">
+                  {category.name}
+                </h3>
+                {category.count && (
+                  <p className="text-gray-400 text-xs mt-0.5">{category.count} vehicles</p>
+                )}
               </div>
             </motion.button>
           ))}

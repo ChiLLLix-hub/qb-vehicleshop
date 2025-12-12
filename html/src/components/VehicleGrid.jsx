@@ -50,7 +50,7 @@ const VehicleGrid = ({ vehicles, onSelect, onClose, onBack, title = "Select Vehi
               onClick={() => onSelect(vehicle)}
               className="w-full glass rounded-xl p-3 hover:bg-white/20 transition-all duration-200 text-left group"
             >
-              <div className="mb-1">
+              <div>
                 <h3 className="text-base font-bold text-white group-hover:text-primary-400 transition-colors">
                   {vehicle.brand} {vehicle.name}
                 </h3>
@@ -58,12 +58,6 @@ const VehicleGrid = ({ vehicles, onSelect, onClose, onBack, title = "Select Vehi
                   {formatCurrency(vehicle.price)}
                 </p>
               </div>
-              
-              {vehicle.category && (
-                <span className="inline-block px-2 py-0.5 bg-white/10 rounded-full text-xs text-gray-300">
-                  {vehicle.category}
-                </span>
-              )}
             </motion.button>
           ))}
         </div>
