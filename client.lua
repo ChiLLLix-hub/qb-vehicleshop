@@ -242,18 +242,11 @@ local function createVehZones(shopName, entity)
         combo:onPlayerInOut(function(isPointInside)
             if isPointInside then
                 if PlayerData and PlayerData.job and (PlayerData.job.name == Config.Shops[insideShop]['Job'] or Config.Shops[insideShop]['Job'] == 'none') then
-                    -- Show NUI instead of qb-menu header
-                    CreateThread(function()
-                        while insideShop do
-                            if IsControlJustPressed(0, Keys.E) then
-                                OpenVehicleNUI(getCurrentVehicleData())
-                            end
-                            Wait(0)
-                        end
-                    end)
+                    -- This creates zones around individual vehicles for non-target mode
+                    -- The shop polyzone already handles the menu display, so we don't need to duplicate here
                 end
             else
-                CloseNUI()
+                -- Don't close NUI here as the shop polyzone handles it
             end
         end)
     else
@@ -289,54 +282,14 @@ local function createFreeUseShop(shopShape, name)
             CreateThread(function()
                 while insideShop do
                     setClosestShowroomVehicle()
-                    vehicleMenu = {
-                        {
-                            isMenuHeader = true,
-                            icon = 'fa-solid fa-circle-info',
-                            header = getVehBrand():upper() .. ' ' .. getVehName():upper() .. ' - $' .. getVehPrice(),
-                        },
-                        {
-                            header = Lang:t('menus.test_header'),
-                            txt = Lang:t('menus.freeuse_test_txt'),
-                            icon = 'fa-solid fa-car-on',
-                            params = {
-                                event = 'qb-vehicleshop:client:TestDrive',
-                            }
-                        },
-                        {
-                            header = Lang:t('menus.freeuse_buy_header'),
-                            txt = Lang:t('menus.freeuse_buy_txt'),
-                            icon = 'fa-solid fa-hand-holding-dollar',
-                            params = {
-                                isServer = true,
-                                event = 'qb-vehicleshop:server:buyShowroomVehicle',
-                                args = {
-                                    buyVehicle = Config.Shops[insideShop]['ShowroomVehicles'][ClosestVehicle].chosenVehicle
-                                }
-                            }
-                        },
-                        {
-                            header = Lang:t('menus.finance_header'),
-                            txt = Lang:t('menus.freeuse_finance_txt'),
-                            icon = 'fa-solid fa-coins',
-                            params = {
-                                event = 'qb-vehicleshop:client:openFinance',
-                                args = {
-                                    price = getVehPrice(),
-                                    buyVehicle = Config.Shops[insideShop]['ShowroomVehicles'][ClosestVehicle].chosenVehicle
-                                }
-                            }
-                        },
-                        {
-                            header = Lang:t('menus.swap_header'),
-                            txt = Lang:t('menus.swap_txt'),
-                            icon = 'fa-solid fa-arrow-rotate-left',
-                            params = {
-                                event = Config.FilterByMake and 'qb-vehicleshop:client:vehMakes' or 'qb-vehicleshop:client:vehCategories',
-                            }
-                        },
-                    }
-                    Wait(1000)
+                    -- Show help text to open vehicle menu
+                    drawTxt('[E] - ' .. getVehBrand():upper() .. ' ' .. getVehName():upper() .. ' - $' .. getVehPrice(), 4, 0.5, 0.93, 0.50, 255, 255, 255, 180)
+                    
+                    -- Check if E is pressed to open NUI
+                    if IsControlJustPressed(0, Keys.E) then
+                        OpenVehicleNUI(getCurrentVehicleData())
+                    end
+                    Wait(0)
                 end
             end)
         else
@@ -359,58 +312,14 @@ local function createManagedShop(shopShape, name)
             CreateThread(function()
                 while insideShop and PlayerData.job and PlayerData.job.name == Config.Shops[name]['Job'] do
                     setClosestShowroomVehicle()
-                    vehicleMenu = {
-                        {
-                            isMenuHeader = true,
-                            icon = 'fa-solid fa-circle-info',
-                            header = getVehBrand():upper() .. ' ' .. getVehName():upper() .. ' - $' .. getVehPrice(),
-                        },
-                        {
-                            header = Lang:t('menus.test_header'),
-                            txt = Lang:t('menus.managed_test_txt'),
-                            icon = 'fa-solid fa-user-plus',
-                            params = {
-                                event = 'qb-vehicleshop:client:openIdMenu',
-                                args = {
-                                    vehicle = Config.Shops[insideShop]['ShowroomVehicles'][ClosestVehicle].chosenVehicle,
-                                    type = 'testDrive'
-                                }
-                            }
-                        },
-                        {
-                            header = Lang:t('menus.managed_sell_header'),
-                            txt = Lang:t('menus.managed_sell_txt'),
-                            icon = 'fa-solid fa-cash-register',
-                            params = {
-                                event = 'qb-vehicleshop:client:openIdMenu',
-                                args = {
-                                    vehicle = Config.Shops[insideShop]['ShowroomVehicles'][ClosestVehicle].chosenVehicle,
-                                    type = 'sellVehicle'
-                                }
-                            }
-                        },
-                        {
-                            header = Lang:t('menus.finance_header'),
-                            txt = Lang:t('menus.managed_finance_txt'),
-                            icon = 'fa-solid fa-coins',
-                            params = {
-                                event = 'qb-vehicleshop:client:openCustomFinance',
-                                args = {
-                                    price = getVehPrice(),
-                                    vehicle = Config.Shops[insideShop]['ShowroomVehicles'][ClosestVehicle].chosenVehicle
-                                }
-                            }
-                        },
-                        {
-                            header = Lang:t('menus.swap_header'),
-                            txt = Lang:t('menus.swap_txt'),
-                            icon = 'fa-solid fa-arrow-rotate-left',
-                            params = {
-                                event = Config.FilterByMake and 'qb-vehicleshop:client:vehMakes' or 'qb-vehicleshop:client:vehCategories',
-                            }
-                        },
-                    }
-                    Wait(1000)
+                    -- Show help text to open vehicle menu (for managed shops, employee only)
+                    drawTxt('[E] - ' .. getVehBrand():upper() .. ' ' .. getVehName():upper() .. ' - $' .. getVehPrice(), 4, 0.5, 0.93, 0.50, 255, 255, 255, 180)
+                    
+                    -- Check if E is pressed to open NUI
+                    if IsControlJustPressed(0, Keys.E) then
+                        OpenVehicleNUI(getCurrentVehicleData())
+                    end
+                    Wait(0)
                 end
             end)
         else
