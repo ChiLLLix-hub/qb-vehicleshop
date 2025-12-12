@@ -134,6 +134,19 @@ local function getVehBrand()
     return QBCore.Shared.Vehicles[Config.Shops[insideShop]['ShowroomVehicles'][ClosestVehicle].chosenVehicle]['brand']
 end
 
+local function getCurrentVehicleData()
+    local vehicleModel = Config.Shops[insideShop]['ShowroomVehicles'][ClosestVehicle].chosenVehicle
+    local vehData = QBCore.Shared.Vehicles[vehicleModel]
+    return {
+        model = vehicleModel,
+        name = vehData.name,
+        brand = vehData.brand,
+        price = vehData.price,
+        category = vehData.category,
+        stats = vehData.stats or nil
+    }
+end
+
 local function setClosestShowroomVehicle()
     local pos = GetEntityCoords(PlayerPedId(), true)
     local current = nil
@@ -168,9 +181,9 @@ local function createTestDriveReturn()
     testDriveZone:onPlayerInOut(function(isPointInside)
         if isPointInside and IsPedInAnyVehicle(PlayerPedId()) then
             SetVehicleForwardSpeed(GetVehiclePedIsIn(PlayerPedId(), false), 0)
-            exports['qb-menu']:openMenu(returnTestDrive)
+            -- NUI will show return button in test drive overlay, no need for separate menu
         else
-            exports['qb-menu']:closeMenu()
+            -- Nothing to close since we're using the test drive overlay
         end
     end)
 end
@@ -188,11 +201,16 @@ local function startTestDriveTimer(testDriveTime, prevCoords)
                     inTestDrive = false
                     SetEntityCoords(PlayerPedId(), prevCoords)
                     QBCore.Functions.Notify(Lang:t('general.testdrive_complete'))
+                    EndTestDriveNUI()
                     if testDriveZone then
                         testDriveZone:destroy()
                     end
                 end
-                drawTxt(Lang:t('general.testdrive_timer') .. math.ceil(testDriveTime - secondsLeft / 1000), 4, 0.5, 0.93, 0.50, 255, 255, 255, 180)
+                -- Update NUI with time remaining
+                local timeLeft = math.ceil(testDriveTime - secondsLeft / 1000)
+                local minutes = math.floor(timeLeft / 60)
+                local seconds = timeLeft % 60
+                UpdateTestDriveTime(string.format("%d:%02d", minutes, seconds))
             end
             Wait(0)
         end
@@ -219,10 +237,18 @@ local function createVehZones(shopName, entity)
         combo:onPlayerInOut(function(isPointInside)
             if isPointInside then
                 if PlayerData and PlayerData.job and (PlayerData.job.name == Config.Shops[insideShop]['Job'] or Config.Shops[insideShop]['Job'] == 'none') then
-                    exports['qb-menu']:showHeader(vehHeaderMenu)
+                    -- Show NUI instead of qb-menu header
+                    CreateThread(function()
+                        while insideShop do
+                            if IsControlJustPressed(0, 38) then -- E key
+                                OpenVehicleNUI(getCurrentVehicleData())
+                            end
+                            Wait(0)
+                        end
+                    end)
                 end
             else
-                exports['qb-menu']:closeMenu()
+                CloseNUI()
             end
         end)
     else
@@ -446,12 +472,11 @@ end
 
 -- Events
 RegisterNetEvent('qb-vehicleshop:client:homeMenu', function()
-    exports['qb-menu']:openMenu(vehicleMenu)
-    --exports['qb-menu']:openMenu(vehMakes)
+    OpenVehicleNUI(getCurrentVehicleData())
 end)
 
 RegisterNetEvent('qb-vehicleshop:client:showVehOptions', function()
-    exports['qb-menu']:openMenu(vehicleMenu, true, true)
+    OpenVehicleNUI(getCurrentVehicleData())
 end)
 
 RegisterNetEvent('qb-vehicleshop:client:TestDrive', function()
@@ -479,6 +504,7 @@ RegisterNetEvent('qb-vehicleshop:client:TestDrive', function()
             SetVehicleEngineOn(veh, true, true, false)
             testDriveVeh = netId
             QBCore.Functions.Notify(Lang:t('general.testdrive_timenoti', { testdrivetime = Config.Shops[tempShop]['TestDriveTimeLimit'] }), "success")
+            StartTestDriveNUI() -- Show NUI test drive overlay
         end, 'TESTDRIVE', Config.Shops[tempShop]['ShowroomVehicles'][ClosestVehicle].chosenVehicle, Config.Shops[tempShop]['TestDriveSpawn'], true) 
 
         createTestDriveReturn()
@@ -530,7 +556,7 @@ RegisterNetEvent('qb-vehicleshop:client:TestDriveReturn', function()
         testDriveVeh = 0
         inTestDrive = false
         DeleteEntity(veh)
-        exports['qb-menu']:closeMenu()
+        EndTestDriveNUI()
         testDriveZone:destroy()
     else
         QBCore.Functions.Notify(Lang:t('error.testdrive_return'), 'error')

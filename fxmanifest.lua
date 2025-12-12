@@ -18,10 +18,19 @@ client_scripts {
     '@PolyZone/EntityZone.lua',
     '@PolyZone/CircleZone.lua',
     '@PolyZone/ComboZone.lua',
+    'client_nui.lua',
     'client.lua'
 }
 
 server_scripts {
     '@oxmysql/lib/MySQL.lua',
     'server.lua'
+}
+
+ui_page 'html/dist/index.html'
+
+files {
+    'html/dist/index.html',
+    'html/dist/assets/*.css',
+    'html/dist/assets/*.js'
 }
