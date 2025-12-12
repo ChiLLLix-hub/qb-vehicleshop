@@ -565,16 +565,9 @@ end)
 
 RegisterNetEvent('qb-vehicleshop:client:vehCategories', function(data)
     local catmenu = {}
+    local categories = {}
     local firstvalue = nil
-    local categoryMenu = {
-        {
-            header = Lang:t('menus.goback_header'),
-            icon = 'fa-solid fa-angle-left',
-            params = {
-                event = Config.FilterByMake and 'qb-vehicleshop:client:vehMakes' or 'qb-vehicleshop:client:homeMenu'
-            }
-        }
-    }
+    
     for k, v in pairs(QBCore.Shared.Vehicles) do
         if type(QBCore.Shared.Vehicles[k]['shop']) == 'table' then
             for _, shop in pairs(QBCore.Shared.Vehicles[k]['shop']) do
@@ -592,102 +585,60 @@ RegisterNetEvent('qb-vehicleshop:client:vehCategories', function(data)
             end
         end
     end
+    
     if Config.HideCategorySelectForOne and tablelength(catmenu) == 1 then
         TriggerEvent('qb-vehicleshop:client:openVehCats', { catName = firstvalue, make = Config.FilterByMake and data.make, onecat = true })
         return
     end
+    
+    -- Convert to NUI format
     for k, v in pairs(catmenu) do
-        categoryMenu[#categoryMenu + 1] = {
-            header = v,
-            icon = 'fa-solid fa-circle',
-            params = {
-                event = 'qb-vehicleshop:client:openVehCats',
-                args = {
-                    catName = k,
-                }
-            }
+        categories[#categories + 1] = {
+            id = k,
+            name = v,
+            icon = '🚗'
         }
     end
-    exports['qb-menu']:openMenu(categoryMenu, Config.SortAlphabetically, true)
+    
+    OpenCategoryNUI(categories)
 end)
 
 RegisterNetEvent('qb-vehicleshop:client:openVehCats', function(data)
-    local vehMenu = {
-        {
-            header = Lang:t('menus.goback_header'),
-            icon = 'fa-solid fa-angle-left',
-            params = {
-                event = 'qb-vehicleshop:client:vehCategories',
-                args = {
-                    make = data.make
-                }
-            }
-        }
-    }
-    if data.onecat == true then
-        vehMenu[1].params = {
-            event = 'qb-vehicleshop:client:vehMakes'
-        }
-    end
+    local vehicles = {}
+    
     for k, v in pairs(QBCore.Shared.Vehicles) do
         if QBCore.Shared.Vehicles[k]['category'] == data.catName then
             if type(QBCore.Shared.Vehicles[k]['shop']) == 'table' then
                 for _, shop in pairs(QBCore.Shared.Vehicles[k]['shop']) do
                     if shop == insideShop then
-                        vehMenu[#vehMenu + 1] = {
-                            header = v.name,
-                            txt = Lang:t('menus.veh_price') .. v.price,
-                            icon = 'fa-solid fa-car-side',
-                            params = {
-                                isServer = true,
-                                event = 'qb-vehicleshop:server:swapVehicle',
-                                args = {
-                                    toVehicle = v.model,
-                                    ClosestVehicle = ClosestVehicle,
-                                    ClosestShop = insideShop,
-                                    catName = data.catName,
-                                    make = data.make,
-                                    onecat = data.onecat
-                                }
-                            }
+                        vehicles[#vehicles + 1] = {
+                            model = v.model,
+                            name = v.name,
+                            brand = v.brand,
+                            price = v.price,
+                            category = v.category
                         }
                     end
                 end
             elseif QBCore.Shared.Vehicles[k]['shop'] == insideShop then
-                vehMenu[#vehMenu + 1] = {
-                    header = v.name,
-                    txt = Lang:t('menus.veh_price') .. v.price,
-                    icon = 'fa-solid fa-car-side',
-                    params = {
-                        isServer = true,
-                        event = 'qb-vehicleshop:server:swapVehicle',
-                        args = {
-                            toVehicle = v.model,
-                            ClosestVehicle = ClosestVehicle,
-                            ClosestShop = insideShop,
-                            catName = data.catName,
-                            make = data.make,
-                            onecat = data.onecat
-                        }
-                    }
+                vehicles[#vehicles + 1] = {
+                    model = v.model,
+                    name = v.name,
+                    brand = v.brand,
+                    price = v.price,
+                    category = v.category
                 }
             end
         end
     end
-    exports['qb-menu']:openMenu(vehMenu, Config.SortAlphabetically, true)
+    
+    OpenVehicleListNUI(vehicles)
 end)
 
 RegisterNetEvent('qb-vehicleshop:client:vehMakes', function()
     local makmenu = {}
-    local makeMenu = {
-        {
-            header = Lang:t('menus.goback_header'),
-            icon = 'fa-solid fa-angle-left',
-            params = {
-                event = 'qb-vehicleshop:client:homeMenu'
-            }
-        }
-    }
+    local makes = {}
+    
     for k, v in pairs(QBCore.Shared.Vehicles) do
         if type(QBCore.Shared.Vehicles[k]['shop']) == 'table' then
             for _, shop in pairs(QBCore.Shared.Vehicles[k]['shop']) do
@@ -699,19 +650,17 @@ RegisterNetEvent('qb-vehicleshop:client:vehMakes', function()
             makmenu[v.brand] = v.brand
         end
     end
+    
+    -- Convert to NUI format
     for _, v in pairs(makmenu) do
-        makeMenu[#makeMenu + 1] = {
-            header = v,
-            icon = 'fa-solid fa-circle',
-            params = {
-                event = 'qb-vehicleshop:client:vehCategories',
-                args = {
-                    make = v
-                }
-            }
+        makes[#makes + 1] = {
+            id = v,
+            name = v,
+            icon = '🏢'
         }
     end
-    exports['qb-menu']:openMenu(makeMenu, Config.SortAlphabetically, true)
+    
+    OpenCategoryNUI(makes)
 end)
 
 RegisterNetEvent('qb-vehicleshop:client:openFinance', function(data)

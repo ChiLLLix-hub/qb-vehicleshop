@@ -151,7 +151,16 @@ end)
 RegisterNUICallback('selectCategory', function(data, cb)
     CloseNUI()
     if data.category then
-        TriggerEvent('qb-vehicleshop:client:showVehicleList', data.category)
+        -- Check if it's a make or category based on context
+        -- If Config.FilterByMake is true and we're selecting from makes menu, this is a make
+        -- Otherwise it's a category
+        if data.category.icon == '🏢' then
+            -- This is a make/brand
+            TriggerEvent('qb-vehicleshop:client:vehCategories', { make = data.category.id })
+        else
+            -- This is a category
+            TriggerEvent('qb-vehicleshop:client:openVehCats', { catName = data.category.id })
+        end
     end
     cb('ok')
 end)
@@ -159,7 +168,11 @@ end)
 RegisterNUICallback('selectVehicle', function(data, cb)
     CloseNUI()
     if data.vehicle then
-        TriggerEvent('qb-vehicleshop:client:swapVehicle', data.vehicle)
+        TriggerServerEvent('qb-vehicleshop:server:swapVehicle', {
+            toVehicle = data.vehicle.model,
+            ClosestVehicle = ClosestVehicle,
+            ClosestShop = insideShop
+        })
     end
     cb('ok')
 end)
