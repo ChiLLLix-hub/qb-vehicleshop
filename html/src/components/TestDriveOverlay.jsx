@@ -7,27 +7,27 @@ const TestDriveOverlay = ({ timeRemaining, onReturn }) => {
       initial={{ opacity: 0, y: -50 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -50 }}
-      className="fixed top-8 left-1/2 transform -translate-x-1/2 z-50"
+      className="fixed top-4 left-4 z-40"
     >
-      <div className="glass-dark rounded-2xl px-8 py-4 shadow-2xl">
-        <div className="flex items-center gap-4">
+      <div className="glass-dark rounded-xl px-6 py-3 shadow-2xl">
+        <div className="flex items-center gap-3">
           <div className="flex items-center gap-2">
-            <svg className="w-6 h-6 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-5 h-5 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
-            <span className="text-white font-semibold">Test Drive</span>
+            <span className="text-white font-semibold text-sm">Test Drive</span>
           </div>
           
-          <div className="border-l border-gray-600 pl-4">
-            <span className="text-2xl font-bold text-primary-400">{timeRemaining}</span>
-            <span className="text-gray-400 ml-2">remaining</span>
+          <div className="border-l border-gray-600 pl-3">
+            <span className="text-xl font-bold text-primary-400">{timeRemaining}</span>
+            <span className="text-gray-400 ml-1 text-sm">left</span>
           </div>
 
           <button
             onClick={onReturn}
-            className="ml-4 bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-4 rounded-lg transition-all duration-200 transform hover:scale-105"
+            className="ml-2 bg-red-600 hover:bg-red-700 text-white font-semibold py-1.5 px-3 rounded-lg transition-all duration-200 text-sm"
           >
-            End Test Drive
+            End Drive
           </button>
         </div>
       </div>

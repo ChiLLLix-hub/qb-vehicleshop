@@ -5,9 +5,9 @@ local testDriveZone = nil
 local vehicleMenu = {}
 local Initialized = false
 local testDriveVeh, inTestDrive = 0, false
-local ClosestVehicle = 1
+ClosestVehicle = 1  -- Global so it can be accessed from client_nui.lua
 local zones = {}
-local insideShop, tempShop = nil, nil
+insideShop, tempShop = nil, nil  -- Global so insideShop can be accessed from client_nui.lua
 
 -- Constants
 local Keys = {
@@ -641,6 +641,16 @@ end)
 
 RegisterNetEvent('qb-vehicleshop:client:swapVehicle', function(data)
     local shopName = data.ClosestShop
+    if not shopName or not Config.Shops[shopName] then
+        print("Error: Invalid shop name or shop not found")
+        return
+    end
+    
+    if not data.ClosestVehicle or not Config.Shops[shopName]['ShowroomVehicles'][data.ClosestVehicle] then
+        print("Error: Invalid vehicle index")
+        return
+    end
+    
     if Config.Shops[shopName]['ShowroomVehicles'][data.ClosestVehicle].chosenVehicle ~= data.toVehicle then
         local closestVehicle, closestDistance = QBCore.Functions.GetClosestVehicle(vector3(Config.Shops[shopName]['ShowroomVehicles'][data.ClosestVehicle].coords.x, Config.Shops[shopName]['ShowroomVehicles'][data.ClosestVehicle].coords.y, Config.Shops[shopName]['ShowroomVehicles'][data.ClosestVehicle].coords.z))
         if closestVehicle == 0 then return end

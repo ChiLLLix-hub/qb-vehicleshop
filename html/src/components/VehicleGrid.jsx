@@ -35,26 +35,22 @@ const VehicleGrid = ({ vehicles, onSelect, onClose, title = "Select Vehicle" }) 
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: index * 0.02 }}
               onClick={() => onSelect(vehicle)}
-              className="w-full glass rounded-xl p-4 hover:bg-white/20 transition-all duration-200 text-left group"
+              className="w-full glass rounded-xl p-3 hover:bg-white/20 transition-all duration-200 text-left group"
             >
-              <div className="mb-2">
-                <h3 className="text-lg font-bold text-white group-hover:text-primary-400 transition-colors">
+              <div className="mb-1">
+                <h3 className="text-base font-bold text-white group-hover:text-primary-400 transition-colors">
                   {vehicle.brand} {vehicle.name}
                 </h3>
-                <p className="text-xl font-bold text-primary-400">
+                <p className="text-lg font-bold text-primary-400">
                   {formatCurrency(vehicle.price)}
                 </p>
               </div>
               
               {vehicle.category && (
-                <span className="inline-block px-2 py-1 bg-white/10 rounded-full text-xs text-gray-300">
+                <span className="inline-block px-2 py-0.5 bg-white/10 rounded-full text-xs text-gray-300">
                   {vehicle.category}
                 </span>
               )}
-
-              <div className="text-xs text-gray-400 mt-2">
-                Model: {vehicle.model}
-              </div>
             </motion.button>
           ))}
         </div>
