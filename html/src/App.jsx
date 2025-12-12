@@ -137,7 +137,7 @@ function App() {
 
         {/* Vehicle Card */}
         {currentView === 'vehicle' && currentVehicle && (
-          <div className="w-full h-full flex items-end pb-8 px-4 pointer-events-auto">
+          <div className="w-full h-full flex items-center justify-start pl-4 pointer-events-auto">
             <VehicleCard
               vehicle={currentVehicle}
               onTestDrive={handleTestDrive}
