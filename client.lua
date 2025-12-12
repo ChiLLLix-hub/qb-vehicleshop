@@ -282,12 +282,14 @@ local function createFreeUseShop(shopShape, name)
             CreateThread(function()
                 while insideShop do
                     setClosestShowroomVehicle()
-                    -- Show help text to open vehicle menu
-                    drawTxt('[E] - ' .. getVehBrand():upper() .. ' ' .. getVehName():upper() .. ' - $' .. getVehPrice(), 4, 0.5, 0.93, 0.50, 255, 255, 255, 180)
-                    
-                    -- Check if E is pressed to open NUI
-                    if IsControlJustPressed(0, Keys.E) then
-                        OpenVehicleNUI(getCurrentVehicleData())
+                    -- Show help text only if not using target system
+                    if not Config.UsingTarget then
+                        drawTxt('[E] - ' .. getVehBrand():upper() .. ' ' .. getVehName():upper() .. ' - $' .. getVehPrice(), 4, 0.5, 0.93, 0.50, 255, 255, 255, 180)
+                        
+                        -- Check if E is pressed to open NUI
+                        if IsControlJustPressed(0, Keys.E) then
+                            OpenVehicleNUI(getCurrentVehicleData())
+                        end
                     end
                     Wait(0)
                 end
@@ -312,12 +314,14 @@ local function createManagedShop(shopShape, name)
             CreateThread(function()
                 while insideShop and PlayerData.job and PlayerData.job.name == Config.Shops[name]['Job'] do
                     setClosestShowroomVehicle()
-                    -- Show help text to open vehicle menu (for managed shops, employee only)
-                    drawTxt('[E] - ' .. getVehBrand():upper() .. ' ' .. getVehName():upper() .. ' - $' .. getVehPrice(), 4, 0.5, 0.93, 0.50, 255, 255, 255, 180)
-                    
-                    -- Check if E is pressed to open NUI
-                    if IsControlJustPressed(0, Keys.E) then
-                        OpenVehicleNUI(getCurrentVehicleData())
+                    -- Show help text only if not using target system (for managed shops, employee only)
+                    if not Config.UsingTarget then
+                        drawTxt('[E] - ' .. getVehBrand():upper() .. ' ' .. getVehName():upper() .. ' - $' .. getVehPrice(), 4, 0.5, 0.93, 0.50, 255, 255, 255, 180)
+                        
+                        -- Check if E is pressed to open NUI
+                        if IsControlJustPressed(0, Keys.E) then
+                            OpenVehicleNUI(getCurrentVehicleData())
+                        end
                     end
                     Wait(0)
                 end
@@ -376,6 +380,8 @@ function Init()
                 SetVehicleDoorsLocked(veh, 3)
                 SetEntityHeading(veh, Config.Shops[k]['ShowroomVehicles'][i].coords.w)
                 FreezeEntityPosition(veh, true)
+                SetEntityAsMissionEntity(veh, true, true)  -- Protect from deletion
+                SetVehicleHasBeenOwnedByPlayer(veh, false)
                 SetVehicleNumberPlateText(veh, 'BUY ME')
                 if Config.UsingTarget then createVehZones(k, veh) end
             end
@@ -674,6 +680,8 @@ RegisterNetEvent('qb-vehicleshop:client:swapVehicle', function(data)
         SetEntityHeading(veh, Config.Shops[shopName]['ShowroomVehicles'][data.ClosestVehicle].coords.w)
         SetVehicleDoorsLocked(veh, 3)
         FreezeEntityPosition(veh, true)
+        SetEntityAsMissionEntity(veh, true, true)  -- Protect from deletion
+        SetVehicleHasBeenOwnedByPlayer(veh, false)
         SetVehicleNumberPlateText(veh, 'BUY ME')
         if Config.UsingTarget then createVehZones(shopName, veh) end
     end

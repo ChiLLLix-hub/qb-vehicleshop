@@ -127,12 +127,10 @@ function App() {
       <AnimatePresence>
         {/* Test Drive Overlay */}
         {testDriveActive && (
-          <div className="pointer-events-auto">
-            <TestDriveOverlay 
-              timeRemaining={testDriveTime}
-              onReturn={handleReturnTestDrive}
-            />
-          </div>
+          <TestDriveOverlay 
+            timeRemaining={testDriveTime}
+            onReturn={handleReturnTestDrive}
+          />
         )}
 
         {/* Vehicle Card */}
@@ -155,6 +153,7 @@ function App() {
               categories={categories}
               onSelect={handleCategorySelect}
               onClose={handleClose}
+              onBack={() => setCurrentView('vehicle')}
             />
           </div>
         )}
@@ -166,6 +165,7 @@ function App() {
               vehicles={vehicles}
               onSelect={handleVehicleSelect}
               onClose={handleClose}
+              onBack={() => setCurrentView('categories')}
             />
           </div>
         )}
@@ -178,6 +178,7 @@ function App() {
               config={config}
               onSubmit={handleFinanceSubmit}
               onClose={() => setCurrentView('vehicle')}
+              onBack={() => setCurrentView('vehicle')}
             />
           </div>
         )}

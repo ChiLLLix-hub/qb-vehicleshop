@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-const CategoryGrid = ({ categories, onSelect, onClose }) => {
+const CategoryGrid = ({ categories, onSelect, onClose, onBack }) => {
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -15,7 +15,20 @@ const CategoryGrid = ({ categories, onSelect, onClose }) => {
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-2xl font-bold text-white">Categories</h2>
+          <div className="flex items-center gap-2">
+            {onBack && (
+              <button
+                onClick={onBack}
+                className="text-gray-400 hover:text-white transition-colors"
+                title="Back"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+              </button>
+            )}
+            <h2 className="text-2xl font-bold text-white">Categories</h2>
+          </div>
           <button
             onClick={onClose}
             className="text-gray-400 hover:text-white transition-colors"

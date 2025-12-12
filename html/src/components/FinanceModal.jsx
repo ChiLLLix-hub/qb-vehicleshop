@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { formatCurrency } from '../utils/misc';
 
-const FinanceModal = ({ vehicle, onSubmit, onClose, config }) => {
+const FinanceModal = ({ vehicle, onSubmit, onClose, onBack, config }) => {
   const DEFAULT_PAYMENT_AMOUNT = 12;
   const [downPayment, setDownPayment] = useState(config?.minimumDown || 10);
   const [paymentAmount, setPaymentAmount] = useState(DEFAULT_PAYMENT_AMOUNT);
@@ -33,7 +33,20 @@ const FinanceModal = ({ vehicle, onSubmit, onClose, config }) => {
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-2xl font-bold text-white">Finance</h2>
+          <div className="flex items-center gap-2">
+            {onBack && (
+              <button
+                onClick={onBack}
+                className="text-gray-400 hover:text-white transition-colors"
+                title="Back"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+              </button>
+            )}
+            <h2 className="text-2xl font-bold text-white">Finance</h2>
+          </div>
           <button
             onClick={onClose}
             className="text-gray-400 hover:text-white transition-colors"
