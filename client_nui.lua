@@ -6,6 +6,7 @@ local currentCategoryContext = {}  -- Track category/make context for vehicle se
 function OpenVehicleNUI(vehicleData)
     if nuiOpen then return end
     nuiOpen = true
+    StartPreviewMode()  -- Start preview mode with camera and invisibility
     SetNuiFocus(true, true)
     SendNUIMessage({
         action = 'setVisible',
@@ -16,7 +17,8 @@ function OpenVehicleNUI(vehicleData)
         vehicle = vehicleData,
         config = {
             minimumDown = Config.MinimumDown,
-            maximumPayments = Config.MaximumPayments
+            maximumPayments = Config.MaximumPayments,
+            enableRotation = Config.PreviewCameraRotation or false
         }
     })
 end
@@ -100,6 +102,7 @@ end
 function CloseNUI()
     if not nuiOpen then return end
     nuiOpen = false
+    StopPreviewMode()  -- Stop preview mode and restore player visibility
     SetNuiFocus(false, false)
     SendNUIMessage({
         action = 'setVisible',
@@ -186,5 +189,19 @@ end)
 
 RegisterNUICallback('returnTestDrive', function(data, cb)
     TriggerEvent('qb-vehicleshop:client:TestDriveReturn')
+    cb('ok')
+end)
+
+RegisterNUICallback('rotateVehicle', function(data, cb)
+    if data.rotation then
+        RotatePreviewVehicle(data.rotation)
+    end
+    cb('ok')
+end)
+
+RegisterNUICallback('setVehicleColor', function(data, cb)
+    if data.colorIndex and data.colorType then
+        SetPreviewVehicleColor(data.colorIndex, data.colorType)
+    end
     cb('ok')
 end)

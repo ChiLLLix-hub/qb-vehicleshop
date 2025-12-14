@@ -139,10 +139,11 @@ RegisterNetEvent('qb-vehicleshop:server:deleteVehicle', function(netId)
     DeleteEntity(vehicle)
 end)
 
--- Sync vehicle for other players
+-- Sync vehicle for other players (only for the requesting client in preview mode)
 RegisterNetEvent('qb-vehicleshop:server:swapVehicle', function(data)
     local src = source
-    TriggerClientEvent('qb-vehicleshop:client:swapVehicle', -1, data)
+    -- Only send to the source client for client-side preview
+    TriggerClientEvent('qb-vehicleshop:client:swapVehicle', src, data)
     Wait(1500)                                                -- let new car spawn
     -- Reopen the vehicle list menu instead of home menu for better UX
     TriggerClientEvent('qb-vehicleshop:client:openVehCats', src, {
