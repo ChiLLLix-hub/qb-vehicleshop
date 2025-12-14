@@ -202,7 +202,7 @@ local function setClosestShowroomVehicle()
     end
 end
 
-local function StartPreviewMode()
+function StartPreviewMode()
     if inPreviewMode then return end
     inPreviewMode = true
     wasInvisible = false
@@ -262,7 +262,7 @@ local function StartPreviewMode()
     end
 end
 
-local function StopPreviewMode()
+function StopPreviewMode()
     if not inPreviewMode then return end
     inPreviewMode = false
     
@@ -301,14 +301,14 @@ local function StopPreviewMode()
     selectedColor = {primary = nil, secondary = nil}
 end
 
-local function RotatePreviewVehicle(rotation)
+function RotatePreviewVehicle(rotation)
     if previewVehicle and DoesEntityExist(previewVehicle) then
         currentVehicleRotation = rotation
         SetEntityHeading(previewVehicle, rotation)
     end
 end
 
-local function SetPreviewVehicleColor(colorIndex, colorType)
+function SetPreviewVehicleColor(colorIndex, colorType)
     if previewVehicle and DoesEntityExist(previewVehicle) then
         if colorType == 'primary' then
             selectedColor.primary = colorIndex
