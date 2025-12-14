@@ -51,7 +51,7 @@ body {
 }
 
 .glass-dark {
-  background: rgba(0, 0, 0, 0.3);
+  background: rgba(88, 71, 132, 0.6);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   border: 1px solid rgba(255, 255, 255, 0.1);
