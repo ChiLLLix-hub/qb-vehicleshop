@@ -91,6 +91,32 @@ Example for PDM:
    - Preview vehicle cleaned up
    - Selected colors applied to purchased vehicle
 
+## Disconnect/Reconnect Handling
+
+The system automatically handles player disconnects and resource restarts:
+
+1. **On Player Disconnect** (`QBCore:Client:OnPlayerUnload`):
+   - Preview mode is automatically stopped
+   - Player visibility restored
+   - Camera cleaned up
+   - Preview vehicles deleted
+   - Showroom vehicles restored
+
+2. **On Player Reconnect** (`QBCore:Client:OnPlayerLoaded`):
+   - System checks if preview mode was active
+   - Ensures clean state on reconnect
+   - No leftover entities or broken states
+
+3. **On Resource Restart** (`onResourceStop`):
+   - Preview mode cleaned up before resource stops
+   - Prevents orphaned cameras and vehicles
+   - Safe resource restart during active preview
+
+This ensures no broken states occur if a player:
+- Loses connection while browsing vehicles
+- Server restarts while in preview mode
+- Resource is restarted while menu is open
+
 ## Compatibility
 
 - Works with both `free-use` and `managed` shop types

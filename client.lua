@@ -28,6 +28,11 @@ AddEventHandler('QBCore:Client:OnPlayerLoaded', function()
     TriggerServerEvent('qb-vehicleshop:server:addPlayer', citizenid)
     TriggerServerEvent('qb-vehicleshop:server:checkFinance')
     if not Initialized then Init() end
+    
+    -- Ensure clean state on player load (handles reconnects)
+    if inPreviewMode then
+        StopPreviewMode()
+    end
 end)
 
 AddEventHandler('onResourceStart', function(resource)
@@ -43,6 +48,16 @@ AddEventHandler('onResourceStart', function(resource)
     end
 end)
 
+AddEventHandler('onResourceStop', function(resource)
+    if resource ~= GetCurrentResourceName() then
+        return
+    end
+    -- Clean up preview mode state when resource stops
+    if inPreviewMode then
+        StopPreviewMode()
+    end
+end)
+
 RegisterNetEvent('QBCore:Client:OnJobUpdate', function(JobInfo)
     PlayerData.job = JobInfo
 end)
@@ -50,6 +65,12 @@ end)
 RegisterNetEvent('QBCore:Client:OnPlayerUnload', function()
     local citizenid = PlayerData.citizenid
     TriggerServerEvent('qb-vehicleshop:server:removePlayer', citizenid)
+    
+    -- Clean up preview mode state on player unload (disconnect/relog)
+    if inPreviewMode then
+        StopPreviewMode()
+    end
+    
     PlayerData = {}
 end)
 

@@ -261,17 +261,36 @@
 - ✓ No orphaned cameras
 - ✓ Player visibility state correct
 
-### Test 14: Connection Loss During Preview
+### Test 14: Resource Restart During Preview
 **Steps:**
 1. Open vehicle menu
-2. Simulate connection loss (disconnect ethernet)
+2. Execute `/restart qb-vehicleshop` or `restart qb-vehicleshop` in server console
+3. Wait for resource to restart
+
+**Expected Results:**
+- ✓ Preview mode cleaned up before restart
+- ✓ Player visibility restored
+- ✓ Camera cleaned up
+- ✓ No errors in console
+- ✓ Resource restarts successfully
+- ✓ Shop works normally after restart
+
+### Test 15: Connection Loss During Preview
+**Steps:**
+1. Open vehicle menu
+2. Simulate connection loss (disconnect ethernet or use `/disconnect`)
+3. Reconnect to the server
 
 **Expected Results:**
 - ✓ Player reconnects successfully
-- ✓ No broken state
+- ✓ Preview mode is automatically cleaned up on disconnect
+- ✓ Player is visible again after reconnect
+- ✓ Camera is restored to normal
+- ✓ Preview vehicles are cleaned up
 - ✓ Can use shop normally after reconnect
+- ✓ No broken state or leftover entities
 
-### Test 15: Purchase During Preview
+### Test 16: Purchase During Preview
 **Steps:**
 1. Player A: Opens menu, selects vehicle and color
 2. Player B: Purchases same showroom spot vehicle
