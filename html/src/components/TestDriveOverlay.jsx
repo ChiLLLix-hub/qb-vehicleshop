@@ -10,23 +10,21 @@ const TestDriveOverlay = ({ timeRemaining, onReturn }) => {
         exit={{ opacity: 0, y: 50 }}
         className="pointer-events-auto w-fit"
       >
-        <div className="bg-black/70 backdrop-blur-sm rounded-lg px-4 py-3 shadow-2xl border border-white/10">
-          <div className="flex flex-col gap-2">
-            <div className="flex items-center gap-2">
-              <svg className="w-4 h-4 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              <span className="text-white font-semibold text-sm">Test Drive</span>
-              <span className="text-lg font-bold text-primary-400 ml-2">{timeRemaining}</span>
-            </div>
-            
-            <button
-              onClick={onReturn}
-              className="w-full bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-4 rounded-md transition-all duration-200 text-sm"
-            >
-              Stop Test Drive [E]
-            </button>
+        <div className="flex flex-col gap-2">
+          <div className="flex items-center gap-2">
+            <svg className="w-4 h-4 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span className="text-white font-semibold text-sm drop-shadow-lg">Test Drive</span>
+            <span className="text-lg font-bold text-primary-400 ml-2 drop-shadow-lg">{timeRemaining}</span>
           </div>
+          
+          <button
+            onClick={onReturn}
+            className="w-full bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-4 rounded-md transition-all duration-200 text-sm shadow-lg"
+          >
+            Stop Test Drive [E]
+          </button>
         </div>
       </motion.div>
     </div>
