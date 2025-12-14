@@ -21,9 +21,9 @@ const TestDriveOverlay = ({ timeRemaining, onReturn }) => {
           
           <button
             onClick={onReturn}
-            className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-md transition-all duration-200 text-sm shadow-lg"
+            className="w-full bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-4 rounded-md transition-all duration-200 text-sm shadow-lg"
           >
-            Stop Drive [E]
+            Stop Test Drive [E]
           </button>
         </div>
       </motion.div>
