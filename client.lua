@@ -14,6 +14,7 @@ local previewVehicle = nil
 local currentVehicleRotation = 0.0
 local selectedColor = {primary = nil, secondary = nil}
 local wasInvisible = false
+local originalShowroomVehicles = {}  -- Track original vehicles to restore later
 
 -- Constants
 local Keys = {
@@ -204,13 +205,39 @@ local function StartPreviewMode()
         RenderScriptCams(true, true, 500, true, true)
     end
     
-    -- Get the current preview vehicle
+    -- Get the current showroom vehicle and hide it (replace with client-side preview)
     if insideShop and ClosestVehicle then
         local vehCoords = Config.Shops[insideShop]['ShowroomVehicles'][ClosestVehicle].coords
         local closestVeh = GetClosestVehicle(vehCoords.x, vehCoords.y, vehCoords.z, 3.0, 0, 70)
         if DoesEntityExist(closestVeh) then
-            previewVehicle = closestVeh
-            currentVehicleRotation = GetEntityHeading(closestVeh)
+            -- Store reference to original vehicle
+            originalShowroomVehicles[ClosestVehicle] = closestVeh
+            -- Hide the original showroom vehicle for this player
+            SetEntityAlpha(closestVeh, 0, false)
+            SetEntityVisible(closestVeh, false, false)
+            
+            -- Create a client-side preview vehicle
+            local model = GetHashKey(Config.Shops[insideShop]['ShowroomVehicles'][ClosestVehicle].chosenVehicle)
+            RequestModel(model)
+            while not HasModelLoaded(model) do
+                Wait(50)
+            end
+            
+            previewVehicle = CreateVehicle(model, vehCoords.x, vehCoords.y, vehCoords.z, false, false)
+            SetModelAsNoLongerNeeded(model)
+            SetVehicleOnGroundProperly(previewVehicle)
+            SetEntityInvincible(previewVehicle, true)
+            SetEntityHeading(previewVehicle, vehCoords.w)
+            SetVehicleDoorsLocked(previewVehicle, 3)
+            FreezeEntityPosition(previewVehicle, true)
+            SetVehicleHasBeenOwnedByPlayer(previewVehicle, false)
+            CleanVehicle(previewVehicle)
+            
+            -- Make preview vehicle only visible to this client
+            SetEntityVisibleToNetwork(previewVehicle, false)
+            SetEntityLocallyInvisible(previewVehicle)
+            
+            currentVehicleRotation = GetEntityHeading(previewVehicle)
         end
     end
 end
@@ -235,7 +262,21 @@ local function StopPreviewMode()
         previewCam = nil
     end
     
-    previewVehicle = nil
+    -- Delete preview vehicle
+    if previewVehicle and DoesEntityExist(previewVehicle) then
+        DeleteEntity(previewVehicle)
+        previewVehicle = nil
+    end
+    
+    -- Restore original showroom vehicles
+    for idx, veh in pairs(originalShowroomVehicles) do
+        if DoesEntityExist(veh) then
+            SetEntityAlpha(veh, 255, false)
+            SetEntityVisible(veh, true, false)
+        end
+    end
+    originalShowroomVehicles = {}
+    
     currentVehicleRotation = 0.0
     selectedColor = {primary = nil, secondary = nil}
 end
@@ -251,10 +292,11 @@ local function SetPreviewVehicleColor(colorIndex, colorType)
     if previewVehicle and DoesEntityExist(previewVehicle) then
         if colorType == 'primary' then
             selectedColor.primary = colorIndex
-            SetVehicleCustomPrimaryColour(previewVehicle, colorIndex, colorIndex, colorIndex)
+            SetVehicleColours(previewVehicle, colorIndex, GetVehicleColours(previewVehicle))
         else
             selectedColor.secondary = colorIndex
-            SetVehicleCustomSecondaryColour(previewVehicle, colorIndex, colorIndex, colorIndex)
+            local primary = GetVehicleColours(previewVehicle)
+            SetVehicleColours(previewVehicle, primary, colorIndex)
         end
     end
 end
@@ -766,14 +808,58 @@ RegisterNetEvent('qb-vehicleshop:client:swapVehicle', function(data)
         return
     end
     
-    if Config.Shops[shopName]['ShowroomVehicles'][data.ClosestVehicle].chosenVehicle ~= data.toVehicle then
+    -- Update the chosen vehicle in config
+    Config.Shops[shopName]['ShowroomVehicles'][data.ClosestVehicle].chosenVehicle = data.toVehicle
+    
+    -- If in preview mode, swap the preview vehicle
+    if inPreviewMode and previewVehicle then
+        local vehCoords = Config.Shops[shopName]['ShowroomVehicles'][data.ClosestVehicle].coords
+        
+        -- Delete old preview vehicle
+        if DoesEntityExist(previewVehicle) then
+            DeleteEntity(previewVehicle)
+        end
+        
+        -- Create new preview vehicle
+        local model = GetHashKey(data.toVehicle)
+        RequestModel(model)
+        while not HasModelLoaded(model) do
+            Wait(50)
+        end
+        
+        previewVehicle = CreateVehicle(model, vehCoords.x, vehCoords.y, vehCoords.z, false, false)
+        SetModelAsNoLongerNeeded(model)
+        SetVehicleOnGroundProperly(previewVehicle)
+        SetEntityInvincible(previewVehicle, true)
+        SetEntityHeading(previewVehicle, currentVehicleRotation or vehCoords.w)
+        SetVehicleDoorsLocked(previewVehicle, 3)
+        FreezeEntityPosition(previewVehicle, true)
+        SetVehicleHasBeenOwnedByPlayer(previewVehicle, false)
+        CleanVehicle(previewVehicle)
+        
+        -- Make preview vehicle only visible to this client
+        SetEntityVisibleToNetwork(previewVehicle, false)
+        SetEntityLocallyInvisible(previewVehicle)
+        
+        -- Reapply color if selected
+        if selectedColor.primary and selectedColor.secondary then
+            SetVehicleColours(previewVehicle, selectedColor.primary, selectedColor.secondary)
+        elseif selectedColor.primary then
+            local _, secondary = GetVehicleColours(previewVehicle)
+            SetVehicleColours(previewVehicle, selectedColor.primary, secondary)
+        elseif selectedColor.secondary then
+            local primary, _ = GetVehicleColours(previewVehicle)
+            SetVehicleColours(previewVehicle, primary, selectedColor.secondary)
+        end
+    else
+        -- Not in preview mode, update showroom vehicle normally
         local closestVehicle, closestDistance = QBCore.Functions.GetClosestVehicle(vector3(Config.Shops[shopName]['ShowroomVehicles'][data.ClosestVehicle].coords.x, Config.Shops[shopName]['ShowroomVehicles'][data.ClosestVehicle].coords.y, Config.Shops[shopName]['ShowroomVehicles'][data.ClosestVehicle].coords.z))
         if closestVehicle == 0 then return end
         if closestDistance < 5 then DeleteEntity(closestVehicle) end
         while DoesEntityExist(closestVehicle) do
             Wait(50)
         end
-        Config.Shops[shopName]['ShowroomVehicles'][data.ClosestVehicle].chosenVehicle = data.toVehicle
+        
         local model = GetHashKey(data.toVehicle)
         RequestModel(model)
         while not HasModelLoaded(model) do
@@ -789,19 +875,10 @@ RegisterNetEvent('qb-vehicleshop:client:swapVehicle', function(data)
         SetEntityHeading(veh, Config.Shops[shopName]['ShowroomVehicles'][data.ClosestVehicle].coords.w)
         SetVehicleDoorsLocked(veh, 3)
         FreezeEntityPosition(veh, true)
-        SetEntityAsMissionEntity(veh, true, true)  -- Protect from deletion
+        SetEntityAsMissionEntity(veh, true, true)
         SetVehicleHasBeenOwnedByPlayer(veh, false)
         SetVehicleNumberPlateText(veh, 'BUY ME')
-        CleanVehicle(veh)  -- Make sure the vehicle is clean
-        
-        -- Make vehicle invisible to network if in preview mode
-        if inPreviewMode then
-            SetEntityVisibleToNetwork(veh, false)
-            SetEntityAlpha(veh, 0, true)
-        end
-        
-        -- Update preview vehicle reference
-        previewVehicle = veh
+        CleanVehicle(veh)
         
         if Config.UsingTarget then createVehZones(shopName, veh) end
     end
@@ -818,11 +895,14 @@ RegisterNetEvent('qb-vehicleshop:client:buyShowroomVehicle', function(vehicle, p
         QBCore.Functions.SetVehicleProperties(veh, properties)
         
         -- Apply selected colors if any
-        if selectedColor.primary then
-            SetVehicleCustomPrimaryColour(veh, selectedColor.primary, selectedColor.primary, selectedColor.primary)
-        end
-        if selectedColor.secondary then
-            SetVehicleCustomSecondaryColour(veh, selectedColor.secondary, selectedColor.secondary, selectedColor.secondary)
+        if selectedColor.primary and selectedColor.secondary then
+            SetVehicleColours(veh, selectedColor.primary, selectedColor.secondary)
+        elseif selectedColor.primary then
+            local _, secondary = GetVehicleColours(veh)
+            SetVehicleColours(veh, selectedColor.primary, secondary)
+        elseif selectedColor.secondary then
+            local primary, _ = GetVehicleColours(veh)
+            SetVehicleColours(veh, primary, selectedColor.secondary)
         end
         
         CleanVehicle(veh)  -- Make sure the vehicle is clean
