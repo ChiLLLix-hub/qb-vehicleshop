@@ -233,9 +233,8 @@ local function StartPreviewMode()
             SetVehicleHasBeenOwnedByPlayer(previewVehicle, false)
             CleanVehicle(previewVehicle)
             
-            -- Make preview vehicle only visible to this client
+            -- Make preview vehicle only visible to this client (not networked)
             SetEntityVisibleToNetwork(previewVehicle, false)
-            SetEntityLocallyInvisible(previewVehicle)
             
             currentVehicleRotation = GetEntityHeading(previewVehicle)
         end
@@ -837,9 +836,8 @@ RegisterNetEvent('qb-vehicleshop:client:swapVehicle', function(data)
         SetVehicleHasBeenOwnedByPlayer(previewVehicle, false)
         CleanVehicle(previewVehicle)
         
-        -- Make preview vehicle only visible to this client
+        -- Make preview vehicle only visible to this client (not networked)
         SetEntityVisibleToNetwork(previewVehicle, false)
-        SetEntityLocallyInvisible(previewVehicle)
         
         -- Reapply color if selected
         if selectedColor.primary and selectedColor.secondary then

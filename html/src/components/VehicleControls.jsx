@@ -7,7 +7,9 @@ const VehicleControls = ({ enableRotation = true }) => {
   const [selectedPrimaryColor, setSelectedPrimaryColor] = useState(0);
   const [showColorPicker, setShowColorPicker] = useState(false);
 
-  // Common vehicle colors (RGB values represented as single value for simplicity)
+  // Common vehicle colors using GTA V's standard color indices
+  // These indices map to the game's built-in color palette
+  // Reference: https://wiki.rage.mp/index.php?title=Vehicle_Colors
   const colors = [
     { name: 'Black', value: 0 },
     { name: 'White', value: 111 },
@@ -107,21 +109,23 @@ const VehicleControls = ({ enableRotation = true }) => {
   );
 };
 
-// Helper function to convert color index to hex (simplified)
+// Helper function to convert GTA V color index to hex for preview
+// This mapping provides approximate hex colors for the UI display
+// Actual in-game colors are rendered by the game engine using the color indices
 const getColorHex = (colorIndex) => {
   const colorMap = {
-    0: '#0d1116',    // Black
-    111: '#f7f7f7',  // White
-    27: '#c00e1a',   // Red
-    64: '#0d4585',   // Blue
-    89: '#ffb900',   // Yellow
-    53: '#155c2d',   // Green
-    38: '#f78616',   // Orange
-    145: '#7b1fa2',  // Purple
-    4: '#c2c4c6',    // Silver
-    5: '#979a97',    // Grey
-    63: '#003e7e',   // Dark Blue
-    51: '#013d20',   // Dark Green
+    0: '#0d1116',    // Black (Metallic Black)
+    111: '#f7f7f7',  // White (Frost White)
+    27: '#c00e1a',   // Red (Torino Red)
+    64: '#0d4585',   // Blue (Diamond Blue)
+    89: '#ffb900',   // Yellow (Race Yellow)
+    53: '#155c2d',   // Green (Gasoline Green)
+    38: '#f78616',   // Orange (Sunrise Orange)
+    145: '#7b1fa2',  // Purple (Midnight Purple)
+    4: '#c2c4c6',    // Silver (Silver)
+    5: '#979a97',    // Grey (Steel Grey)
+    63: '#003e7e',   // Dark Blue (Dark Blue)
+    51: '#013d20',   // Dark Green (Dark Green)
   };
   return colorMap[colorIndex] || '#000000';
 };
