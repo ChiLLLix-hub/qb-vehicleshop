@@ -44,9 +44,39 @@ When a player interacts with the vehicle shop menu:
 
 ### Global Settings
 ```lua
-Config.EnablePreviewCamera = true      -- Enable/disable camera system
-Config.PreviewCameraRotation = true    -- Enable/disable rotation slider
+Config.EnablePreviewCamera = true              -- Enable/disable camera system
+Config.PreviewCameraRotation = true            -- Enable/disable rotation slider
+Config.PreviewModeForManagedShops = false      -- Enable/disable preview mode for managed shops
 ```
+
+### Managed Shop Behavior
+
+The `Config.PreviewModeForManagedShops` setting controls how preview mode works for managed shops (cardealer jobs):
+
+**When set to `false` (recommended for managed shops):**
+- **Dealer stays visible** to customers
+- **Vehicle swaps are networked** - all players see the swapped vehicles
+- **No camera movement** - dealer maintains normal view
+- **Rotation and color picker still work** - but affect the actual showroom vehicle
+- Traditional cardealer workflow preserved
+- Dealer can show vehicles to customers in real-time
+
+**When set to `true`:**
+- Full preview mode applies to managed shops
+- Same behavior as free-use shops
+- Dealer becomes invisible
+- Vehicle swaps are client-side only
+- Camera movement enabled
+
+**Recommended Configuration:**
+```lua
+-- For best experience
+Config.PreviewModeForManagedShops = false  -- Keep managed shops traditional
+```
+
+This ensures:
+- Free-use shops: Full immersive preview mode for individual customers
+- Managed shops: Visible dealers who can demonstrate vehicles to customers
 
 ### Per-Shop Camera Position
 Add to each shop in Config.Shops:

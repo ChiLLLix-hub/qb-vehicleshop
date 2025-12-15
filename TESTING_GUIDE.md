@@ -216,8 +216,36 @@
 
 ---
 
-### Test 12: Managed Shop (Luxury)
-**Requirements:** Player with 'cardealer' job
+### Test 12: Managed Shop with Preview Mode Disabled
+**Requirements:** 
+- Player with 'cardealer' job
+- `Config.PreviewModeForManagedShops = false`
+- At least 2 players (dealer + customer)
+
+**Steps:**
+1. Dealer: Go to Luxury Vehicle Shop
+2. Dealer: Open vehicle menu
+3. Dealer: Use rotation slider
+4. Customer: Observe the dealer and vehicle
+5. Dealer: Swap to different vehicle
+6. Customer: Observe the vehicle change
+7. Dealer: Change vehicle color
+8. Customer: Observe the color change
+
+**Expected Results:**
+- ✓ Dealer remains visible to customer
+- ✓ No camera movement for dealer
+- ✓ Customer can see dealer's actions
+- ✓ Vehicle rotations visible to customer
+- ✓ Vehicle swaps visible to customer
+- ✓ Color changes visible to customer
+- ✓ Dealer can sell/test drive for customer
+- ✓ Traditional cardealer workflow preserved
+
+### Test 13: Managed Shop with Preview Mode Enabled
+**Requirements:** 
+- Player with 'cardealer' job
+- `Config.PreviewModeForManagedShops = true`
 
 **Steps:**
 1. Go to Luxury Vehicle Shop
@@ -225,9 +253,11 @@
 3. Test all features (rotation, color, swap, etc.)
 
 **Expected Results:**
-- ✓ All features work same as free-use shop
-- ✓ Camera position is correct for luxury shop
-- ✓ Can sell to other players (existing functionality)
+- ✓ Full preview mode active (same as free-use)
+- ✓ Dealer becomes invisible
+- ✓ Camera moves to configured position
+- ✓ Vehicle swaps are client-side only
+- ✓ All isolation features work
 
 ---
 

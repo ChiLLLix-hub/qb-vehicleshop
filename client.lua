@@ -204,6 +204,16 @@ end
 
 function StartPreviewMode()
     if inPreviewMode then return end
+    
+    -- Check if preview mode should be disabled for managed shops
+    if insideShop and Config.Shops[insideShop] then
+        local shopType = Config.Shops[insideShop]['Type']
+        if shopType == 'managed' and not Config.PreviewModeForManagedShops then
+            -- Preview mode disabled for managed shops - don't activate isolation features
+            return
+        end
+    end
+    
     inPreviewMode = true
     wasInvisible = false
     
@@ -302,14 +312,24 @@ function StopPreviewMode()
 end
 
 function RotatePreviewVehicle(rotation)
-    if previewVehicle and DoesEntityExist(previewVehicle) then
+    -- If in preview mode, rotate the preview vehicle
+    if inPreviewMode and previewVehicle and DoesEntityExist(previewVehicle) then
         currentVehicleRotation = rotation
         SetEntityHeading(previewVehicle, rotation)
+    -- If not in preview mode (managed shops), rotate the showroom vehicle
+    elseif insideShop and ClosestVehicle then
+        local vehCoords = Config.Shops[insideShop]['ShowroomVehicles'][ClosestVehicle].coords
+        local closestVeh = GetClosestVehicle(vehCoords.x, vehCoords.y, vehCoords.z, 3.0, 0, 70)
+        if DoesEntityExist(closestVeh) then
+            currentVehicleRotation = rotation
+            SetEntityHeading(closestVeh, rotation)
+        end
     end
 end
 
 function SetPreviewVehicleColor(colorIndex, colorType)
-    if previewVehicle and DoesEntityExist(previewVehicle) then
+    -- If in preview mode, color the preview vehicle
+    if inPreviewMode and previewVehicle and DoesEntityExist(previewVehicle) then
         if colorType == 'primary' then
             selectedColor.primary = colorIndex
             SetVehicleColours(previewVehicle, colorIndex, GetVehicleColours(previewVehicle))
@@ -317,6 +337,20 @@ function SetPreviewVehicleColor(colorIndex, colorType)
             selectedColor.secondary = colorIndex
             local primary = GetVehicleColours(previewVehicle)
             SetVehicleColours(previewVehicle, primary, colorIndex)
+        end
+    -- If not in preview mode (managed shops), color the showroom vehicle
+    elseif insideShop and ClosestVehicle then
+        local vehCoords = Config.Shops[insideShop]['ShowroomVehicles'][ClosestVehicle].coords
+        local closestVeh = GetClosestVehicle(vehCoords.x, vehCoords.y, vehCoords.z, 3.0, 0, 70)
+        if DoesEntityExist(closestVeh) then
+            if colorType == 'primary' then
+                selectedColor.primary = colorIndex
+                SetVehicleColours(closestVeh, colorIndex, GetVehicleColours(closestVeh))
+            else
+                selectedColor.secondary = colorIndex
+                local primary = GetVehicleColours(closestVeh)
+                SetVehicleColours(closestVeh, primary, colorIndex)
+            end
         end
     end
 end

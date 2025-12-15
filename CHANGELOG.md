@@ -19,7 +19,15 @@
 #### Configuration Options
 - **Config.EnablePreviewCamera**: Toggle camera system on/off
 - **Config.PreviewCameraRotation**: Toggle rotation slider on/off
+- **Config.PreviewModeForManagedShops**: Enable/disable preview mode for managed shops (cardealer jobs)
 - **PreviewCameraPos**: Configurable camera position per shop (vector4)
+
+#### Managed Shop Support
+- **Configurable Preview Mode**: Option to disable isolation features for managed shops
+- **Traditional Dealer Workflow**: Dealers stay visible and can demonstrate vehicles to customers
+- **Networked Vehicle Swaps**: When preview mode is disabled for managed shops, all players see vehicle swaps
+- **Rotation & Color Still Work**: Interactive features available without isolation
+- **Flexible Configuration**: Choose between immersive mode (free-use) and collaborative mode (managed)
 
 ### 🔧 Technical Implementation
 
@@ -52,6 +60,7 @@
 -- Global settings
 Config.EnablePreviewCamera = true
 Config.PreviewCameraRotation = true
+Config.PreviewModeForManagedShops = false  -- Recommended: disable for cardealer shops
 
 -- Per-shop camera position
 ['pdm'] = {

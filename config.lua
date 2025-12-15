@@ -12,6 +12,7 @@ Config.SortAlphabetically = true                      -- will sort make, categor
 Config.HideCategorySelectForOne = true                -- will hide the category selection menu if a shop only sells one category of vehicle or a make has only one category
 Config.EnablePreviewCamera = true                     -- Enable camera movement when viewing vehicles
 Config.PreviewCameraRotation = true                   -- Enable 360 rotation with slider
+Config.PreviewModeForManagedShops = false             -- Enable/disable preview mode for managed shops (cardealer jobs)
 Config.Shops = {
     ['pdm'] = {
         ['Type'] = 'free-use', -- no player interaction is required to purchase a car
