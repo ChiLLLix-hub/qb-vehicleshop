@@ -355,7 +355,7 @@ function SetPreviewVehicleColor(colorIndex, colorType)
     end
 end
 
-local function CleanVehicle(vehicle)
+function CleanVehicle(vehicle)
     if DoesEntityExist(vehicle) then
         SetVehicleDirtLevel(vehicle, 0.0)
         WashDecalsFromVehicle(vehicle, 1.0)
