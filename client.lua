@@ -513,11 +513,6 @@ local function createFreeUseShop(shopShape, name)
         end
     end)
 end
-            insideShop = nil
-            ClosestVehicle = 1
-        end
-    end)
-end
 
 local function createManagedShop(shopShape, name)
     local zone = PolyZone:Create(shopShape, {
