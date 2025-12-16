@@ -139,10 +139,25 @@ RegisterNetEvent('qb-vehicleshop:server:deleteVehicle', function(netId)
     DeleteEntity(vehicle)
 end)
 
--- Sync vehicle for other players
+-- Sync vehicle for other players (broadcast for managed shops, source only for free-use)
 RegisterNetEvent('qb-vehicleshop:server:swapVehicle', function(data)
     local src = source
-    TriggerClientEvent('qb-vehicleshop:client:swapVehicle', -1, data)
+    
+    -- Check if this is a managed shop
+    local shopName = data.ClosestShop
+    local isManaged = false
+    if shopName and Config.Shops[shopName] then
+        isManaged = Config.Shops[shopName]['Type'] == 'managed'
+    end
+    
+    -- If managed shop and preview mode is disabled for managed shops, broadcast to all
+    -- Otherwise, only send to source client for client-side preview
+    if isManaged and not Config.PreviewModeForManagedShops then
+        TriggerClientEvent('qb-vehicleshop:client:swapVehicle', -1, data)
+    else
+        TriggerClientEvent('qb-vehicleshop:client:swapVehicle', src, data)
+    end
+    
     Wait(1500)                                                -- let new car spawn
     -- Reopen the vehicle list menu instead of home menu for better UX
     TriggerClientEvent('qb-vehicleshop:client:openVehCats', src, {

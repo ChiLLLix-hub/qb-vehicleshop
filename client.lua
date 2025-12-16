@@ -8,6 +8,13 @@ local testDriveVeh, inTestDrive = 0, false
 ClosestVehicle = 1  -- Global so it can be accessed from client_nui.lua
 local zones = {}
 insideShop, tempShop = nil, nil  -- Global so insideShop can be accessed from client_nui.lua
+local previewCam = nil
+local inPreviewMode = false
+local previewVehicle = nil
+local currentVehicleRotation = 0.0
+local selectedColor = {primary = nil, secondary = nil}
+local wasInvisible = false
+local originalShowroomVehicles = {}  -- Track original vehicles to restore later
 
 -- Constants
 local Keys = {
@@ -21,6 +28,11 @@ AddEventHandler('QBCore:Client:OnPlayerLoaded', function()
     TriggerServerEvent('qb-vehicleshop:server:addPlayer', citizenid)
     TriggerServerEvent('qb-vehicleshop:server:checkFinance')
     if not Initialized then Init() end
+    
+    -- Ensure clean state on player load (handles reconnects)
+    if inPreviewMode then
+        StopPreviewMode()
+    end
 end)
 
 AddEventHandler('onResourceStart', function(resource)
@@ -36,6 +48,16 @@ AddEventHandler('onResourceStart', function(resource)
     end
 end)
 
+AddEventHandler('onResourceStop', function(resource)
+    if resource ~= GetCurrentResourceName() then
+        return
+    end
+    -- Clean up preview mode state when resource stops
+    if inPreviewMode then
+        StopPreviewMode()
+    end
+end)
+
 RegisterNetEvent('QBCore:Client:OnJobUpdate', function(JobInfo)
     PlayerData.job = JobInfo
 end)
@@ -43,6 +65,12 @@ end)
 RegisterNetEvent('QBCore:Client:OnPlayerUnload', function()
     local citizenid = PlayerData.citizenid
     TriggerServerEvent('qb-vehicleshop:server:removePlayer', citizenid)
+    
+    -- Clean up preview mode state on player unload (disconnect/relog)
+    if inPreviewMode then
+        StopPreviewMode()
+    end
+    
     PlayerData = {}
 end)
 
@@ -174,6 +202,169 @@ local function setClosestShowroomVehicle()
     end
 end
 
+function StartPreviewMode()
+    if inPreviewMode then return end
+    
+    -- Check if preview mode should be disabled for managed shops
+    if insideShop and Config.Shops[insideShop] then
+        local shopType = Config.Shops[insideShop]['Type']
+        if shopType == 'managed' and not Config.PreviewModeForManagedShops then
+            -- Preview mode disabled for managed shops - don't activate isolation features
+            return
+        end
+    end
+    
+    inPreviewMode = true
+    
+    -- Create camera if configured
+    if Config.EnablePreviewCamera and Config.Shops[insideShop] and Config.Shops[insideShop]['PreviewCameraPos'] then
+        local camPos = Config.Shops[insideShop]['PreviewCameraPos']
+        previewCam = CreateCam('DEFAULT_SCRIPTED_CAMERA', true)
+        SetCamCoord(previewCam, camPos.x, camPos.y, camPos.z)
+        SetCamRot(previewCam, 0.0, 0.0, camPos.w, 2)
+        SetCamActive(previewCam, true)
+        RenderScriptCams(true, true, 500, true, true)
+    end
+    
+    -- Get the current showroom vehicle and hide it (replace with client-side preview)
+    -- Only for free-use shops
+    if insideShop and ClosestVehicle and Config.Shops[insideShop]['Type'] == 'free-use' then
+        local vehCoords = Config.Shops[insideShop]['ShowroomVehicles'][ClosestVehicle].coords
+        local closestVeh = GetClosestVehicle(vehCoords.x, vehCoords.y, vehCoords.z, 3.0, 0, 70)
+        if DoesEntityExist(closestVeh) then
+            -- Store reference to original vehicle
+            originalShowroomVehicles[ClosestVehicle] = closestVeh
+            -- Hide the original showroom vehicle for this player
+            SetEntityAlpha(closestVeh, 0, false)
+            SetEntityVisible(closestVeh, false, false)
+            
+            -- Create a client-side preview vehicle (visual only, no collision)
+            local model = GetHashKey(Config.Shops[insideShop]['ShowroomVehicles'][ClosestVehicle].chosenVehicle)
+            RequestModel(model)
+            while not HasModelLoaded(model) do
+                Wait(50)
+            end
+            
+            -- Create as vehicle to support colors, but disable collision for visual-only preview
+            previewVehicle = CreateVehicle(model, vehCoords.x, vehCoords.y, vehCoords.z, false, false)
+            SetModelAsNoLongerNeeded(model)
+            SetVehicleOnGroundProperly(previewVehicle)
+            SetEntityHeading(previewVehicle, vehCoords.w)
+            SetEntityCollision(previewVehicle, false, false)  -- Disable collision - players can walk through
+            SetEntityInvincible(previewVehicle, true)
+            SetVehicleDoorsLocked(previewVehicle, 3)
+            SetVehicleHasBeenOwnedByPlayer(previewVehicle, false)
+            CleanVehicle(previewVehicle)
+            -- Not using FreezeEntityPosition - vehicle stays in place due to no collision/physics
+            
+            currentVehicleRotation = GetEntityHeading(previewVehicle)
+        end
+    end
+end
+
+function StopPreviewMode()
+    if not inPreviewMode then return end
+    inPreviewMode = false
+    
+    -- Destroy camera
+    if previewCam then
+        RenderScriptCams(false, true, 500, true, true)
+        DestroyCam(previewCam, false)
+        previewCam = nil
+    end
+    
+    -- Delete preview vehicle
+    if previewVehicle and DoesEntityExist(previewVehicle) then
+        DeleteEntity(previewVehicle)
+        previewVehicle = nil
+    end
+    
+    -- Restore original showroom vehicles
+    for idx, veh in pairs(originalShowroomVehicles) do
+        if DoesEntityExist(veh) then
+            SetEntityAlpha(veh, 255, false)
+            SetEntityVisible(veh, true, false)
+        end
+    end
+    originalShowroomVehicles = {}
+    
+    currentVehicleRotation = 0.0
+    selectedColor = {primary = nil, secondary = nil}
+end
+
+function RotatePreviewVehicle(rotation)
+    -- If in preview mode, rotate the preview vehicle
+    if inPreviewMode and previewVehicle and DoesEntityExist(previewVehicle) then
+        currentVehicleRotation = rotation
+        SetEntityHeading(previewVehicle, rotation)
+    -- If not in preview mode (managed shops), rotate the showroom vehicle
+    elseif insideShop and ClosestVehicle then
+        local vehCoords = Config.Shops[insideShop]['ShowroomVehicles'][ClosestVehicle].coords
+        local closestVeh = GetClosestVehicle(vehCoords.x, vehCoords.y, vehCoords.z, 3.0, 0, 70)
+        if DoesEntityExist(closestVeh) then
+            currentVehicleRotation = rotation
+            SetEntityHeading(closestVeh, rotation)
+        end
+    end
+end
+
+function SetPreviewVehicleColor(colorIndex, colorType)
+    -- If in preview mode, color the preview vehicle
+    if inPreviewMode and previewVehicle and DoesEntityExist(previewVehicle) then
+        if colorType == 'primary' then
+            selectedColor.primary = colorIndex
+            SetVehicleColours(previewVehicle, colorIndex, GetVehicleColours(previewVehicle))
+        else
+            selectedColor.secondary = colorIndex
+            local primary = GetVehicleColours(previewVehicle)
+            SetVehicleColours(previewVehicle, primary, colorIndex)
+        end
+    -- If not in preview mode (managed shops), color the showroom vehicle
+    elseif insideShop and ClosestVehicle then
+        local vehCoords = Config.Shops[insideShop]['ShowroomVehicles'][ClosestVehicle].coords
+        local closestVeh = GetClosestVehicle(vehCoords.x, vehCoords.y, vehCoords.z, 3.0, 0, 70)
+        if DoesEntityExist(closestVeh) then
+            if colorType == 'primary' then
+                selectedColor.primary = colorIndex
+                SetVehicleColours(closestVeh, colorIndex, GetVehicleColours(closestVeh))
+            else
+                selectedColor.secondary = colorIndex
+                local primary = GetVehicleColours(closestVeh)
+                SetVehicleColours(closestVeh, primary, colorIndex)
+            end
+        end
+    end
+end
+
+function CleanVehicle(vehicle)
+    if DoesEntityExist(vehicle) then
+        SetVehicleDirtLevel(vehicle, 0.0)
+        WashDecalsFromVehicle(vehicle, 1.0)
+    end
+end
+
+-- Reset showroom vehicle to default
+function ResetShowroomVehicle(shopName, vehicleIndex)
+    if not shopName or not vehicleIndex then return end
+    if not Config.Shops[shopName] or not Config.Shops[shopName]['ShowroomVehicles'][vehicleIndex] then return end
+    
+    local defaultVehicle = Config.Shops[shopName]['ShowroomVehicles'][vehicleIndex].defaultVehicle
+    if not defaultVehicle then return end
+    
+    -- Reset the chosen vehicle back to default
+    Config.Shops[shopName]['ShowroomVehicles'][vehicleIndex].chosenVehicle = defaultVehicle
+    
+    -- Trigger swap back to default vehicle (server will handle the actual swap)
+    TriggerServerEvent('qb-vehicleshop:server:swapVehicle', {
+        toVehicle = defaultVehicle,
+        ClosestVehicle = vehicleIndex,
+        ClosestShop = shopName,
+        catName = nil,  -- Not needed for reset
+        make = nil,
+        onecat = nil
+    })
+end
+
 local function createTestDriveReturn()
     testDriveZone = BoxZone:Create(
         Config.Shops[insideShop]['ReturnLocation'],
@@ -237,6 +428,12 @@ local function startTestDriveTimer(testDriveTime, prevCoords)
 end
 
 local function createVehZones(shopName, entity)
+    -- Only create vehicle interaction zones for managed shops
+    local shopType = Config.Shops[shopName] and Config.Shops[shopName]['Type']
+    if shopType ~= 'managed' then
+        return
+    end
+    
     if not Config.UsingTarget then
         for i = 1, #Config.Shops[shopName]['ShowroomVehicles'] do
             zones[#zones + 1] = BoxZone:Create(
@@ -273,13 +470,45 @@ local function createVehZones(shopName, entity)
                     label = Lang:t('general.vehinteraction'),
                     canInteract = function()
                         local closestShop = insideShop
-                        return closestShop and (Config.Shops[closestShop]['Job'] == 'none' or PlayerData.job.name == Config.Shops[closestShop]['Job'])
+                        return closestShop and PlayerData.job.name == Config.Shops[closestShop]['Job']
                     end
                 },
             },
             distance = 3.0
         })
     end
+end
+
+-- Create monitor interaction for free-use shops
+local function createMonitorInteraction(shopName)
+    local shop = Config.Shops[shopName]
+    if not shop or shop['Type'] ~= 'free-use' or not shop['MonitorInteraction'] then
+        return
+    end
+    
+    local monitorCoords = shop['MonitorInteraction']
+    
+    exports['qb-target']:AddBoxZone('vehicleshop_monitor_' .. shopName, monitorCoords, 1.0, 1.0, {
+        name = 'vehicleshop_monitor_' .. shopName,
+        heading = 330.08,
+        debugPoly = false,
+        minZ = monitorCoords.z - 0.5,
+        maxZ = monitorCoords.z + 0.5,
+    }, {
+        options = {
+            {
+                type = 'client',
+                event = 'qb-vehicleshop:client:openMonitorMenu',
+                icon = 'fas fa-desktop',
+                label = 'Browse Vehicles',
+                shopName = shopName,
+                canInteract = function()
+                    return insideShop == shopName
+                end
+            },
+        },
+        distance = 2.0
+    })
 end
 
 -- Zones
@@ -296,15 +525,7 @@ local function createFreeUseShop(shopShape, name)
             CreateThread(function()
                 while insideShop do
                     setClosestShowroomVehicle()
-                    -- Show help text only if not using target system
-                    if not Config.UsingTarget then
-                        drawTxt('[E] - ' .. getVehBrand():upper() .. ' ' .. getVehName():upper() .. ' - $' .. getVehPrice(), 4, 0.5, 0.93, 0.50, 255, 255, 255, 180)
-                        
-                        -- Check if E is pressed to open NUI
-                        if IsControlJustPressed(0, Keys.E) then
-                            OpenVehicleNUI(getCurrentVehicleData())
-                        end
-                    end
+                    -- Free-use shops don't show help text, they use monitor interaction
                     Wait(0)
                 end
             end)
@@ -372,6 +593,9 @@ function Init()
         for name, shop in pairs(Config.Shops) do
             if shop['Type'] == 'free-use' then
                 createFreeUseShop(shop['Zone']['Shape'], name)
+                if Config.UsingTarget then
+                    createMonitorInteraction(name)
+                end
             elseif shop['Type'] == 'managed' then
                 createManagedShop(shop['Zone']['Shape'], name)
             end
@@ -413,11 +637,21 @@ RegisterNetEvent('qb-vehicleshop:client:showVehOptions', function()
     OpenVehicleNUI(getCurrentVehicleData())
 end)
 
+RegisterNetEvent('qb-vehicleshop:client:openMonitorMenu', function(data)
+    -- This event is triggered when player interacts with the monitor
+    -- Make sure we're in the right shop
+    if insideShop and insideShop == data.shopName then
+        OpenVehicleNUI(getCurrentVehicleData())
+    end
+end)
+
 RegisterNetEvent('qb-vehicleshop:client:TestDrive', function()
     if not inTestDrive and ClosestVehicle ~= 0 then
         inTestDrive = true
         local prevCoords = GetEntityCoords(PlayerPedId())
         tempShop = insideShop -- temp hacky way of setting the shop because it changes after the callback has returned since you are outside the zone
+        StopPreviewMode()  -- Exit preview mode and restore player visibility
+        
         QBCore.Functions.TriggerCallback('qb-vehicleshop:server:spawnvehicle', function(netId, properties, vehPlate)
             local timeout = 5000
             local startTime = GetGameTimer()
@@ -432,6 +666,7 @@ RegisterNetEvent('qb-vehicleshop:client:TestDrive', function()
             SetEntityAsMissionEntity(veh, true, true)
             Citizen.InvokeNative(0xAD738C3085FE7E11, veh, true, true)
             SetVehicleNumberPlateText(veh, vehPlate)
+            CleanVehicle(veh)  -- Make sure the vehicle is clean
             exports['LegacyFuel']:SetFuel(veh, 100)
             TriggerEvent('vehiclekeys:client:SetOwner', vehPlate)
             TaskWarpPedIntoVehicle(PlayerPedId(), veh, -1)
@@ -671,14 +906,56 @@ RegisterNetEvent('qb-vehicleshop:client:swapVehicle', function(data)
         return
     end
     
-    if Config.Shops[shopName]['ShowroomVehicles'][data.ClosestVehicle].chosenVehicle ~= data.toVehicle then
+    -- Update the chosen vehicle in config
+    Config.Shops[shopName]['ShowroomVehicles'][data.ClosestVehicle].chosenVehicle = data.toVehicle
+    
+    -- If in preview mode, swap the preview vehicle
+    if inPreviewMode and previewVehicle then
+        local vehCoords = Config.Shops[shopName]['ShowroomVehicles'][data.ClosestVehicle].coords
+        
+        -- Delete old preview vehicle
+        if DoesEntityExist(previewVehicle) then
+            DeleteEntity(previewVehicle)
+        end
+        
+        -- Create new preview vehicle
+        local model = GetHashKey(data.toVehicle)
+        RequestModel(model)
+        while not HasModelLoaded(model) do
+            Wait(50)
+        end
+        
+        previewVehicle = CreateVehicle(model, vehCoords.x, vehCoords.y, vehCoords.z, false, false)
+        SetModelAsNoLongerNeeded(model)
+        SetVehicleOnGroundProperly(previewVehicle)
+        SetEntityHeading(previewVehicle, currentVehicleRotation or vehCoords.w)
+        SetEntityCollision(previewVehicle, false, false)  -- Disable collision - players can walk through
+        SetEntityInvincible(previewVehicle, true)
+        SetVehicleDoorsLocked(previewVehicle, 3)
+        SetVehicleHasBeenOwnedByPlayer(previewVehicle, false)
+        CleanVehicle(previewVehicle)
+        
+        -- Vehicle is already client-side only (4th param of CreateVehicle is false)
+        
+        -- Reapply color if selected
+        if selectedColor.primary and selectedColor.secondary then
+            SetVehicleColours(previewVehicle, selectedColor.primary, selectedColor.secondary)
+        elseif selectedColor.primary then
+            local _, secondary = GetVehicleColours(previewVehicle)
+            SetVehicleColours(previewVehicle, selectedColor.primary, secondary)
+        elseif selectedColor.secondary then
+            local primary, _ = GetVehicleColours(previewVehicle)
+            SetVehicleColours(previewVehicle, primary, selectedColor.secondary)
+        end
+    else
+        -- Not in preview mode, update showroom vehicle normally
         local closestVehicle, closestDistance = QBCore.Functions.GetClosestVehicle(vector3(Config.Shops[shopName]['ShowroomVehicles'][data.ClosestVehicle].coords.x, Config.Shops[shopName]['ShowroomVehicles'][data.ClosestVehicle].coords.y, Config.Shops[shopName]['ShowroomVehicles'][data.ClosestVehicle].coords.z))
         if closestVehicle == 0 then return end
         if closestDistance < 5 then DeleteEntity(closestVehicle) end
         while DoesEntityExist(closestVehicle) do
             Wait(50)
         end
-        Config.Shops[shopName]['ShowroomVehicles'][data.ClosestVehicle].chosenVehicle = data.toVehicle
+        
         local model = GetHashKey(data.toVehicle)
         RequestModel(model)
         while not HasModelLoaded(model) do
@@ -694,24 +971,50 @@ RegisterNetEvent('qb-vehicleshop:client:swapVehicle', function(data)
         SetEntityHeading(veh, Config.Shops[shopName]['ShowroomVehicles'][data.ClosestVehicle].coords.w)
         SetVehicleDoorsLocked(veh, 3)
         FreezeEntityPosition(veh, true)
-        SetEntityAsMissionEntity(veh, true, true)  -- Protect from deletion
+        SetEntityAsMissionEntity(veh, true, true)
         SetVehicleHasBeenOwnedByPlayer(veh, false)
         SetVehicleNumberPlateText(veh, 'BUY ME')
+        CleanVehicle(veh)
+        
         if Config.UsingTarget then createVehZones(shopName, veh) end
     end
 end)
 
 RegisterNetEvent('qb-vehicleshop:client:buyShowroomVehicle', function(vehicle, plate)
     tempShop = insideShop -- temp hacky way of setting the shop because it changes after the callback has returned since you are outside the zone
+    local shopName = tempShop
+    local vehicleIndex = ClosestVehicle
+    
+    StopPreviewMode()  -- Exit preview mode and restore player visibility
+    
     QBCore.Functions.TriggerCallback('qb-vehicleshop:server:spawnvehicle', function(netId, properties, vehPlate)
         while not NetworkDoesNetworkIdExist(netId) do Wait(10) end
         local veh = NetworkGetEntityFromNetworkId(netId)
         Citizen.Await(CheckPlate(veh, vehPlate))
         QBCore.Functions.SetVehicleProperties(veh, properties)
+        
+        -- Apply selected colors if any
+        if selectedColor.primary and selectedColor.secondary then
+            SetVehicleColours(veh, selectedColor.primary, selectedColor.secondary)
+        elseif selectedColor.primary then
+            local _, secondary = GetVehicleColours(veh)
+            SetVehicleColours(veh, selectedColor.primary, secondary)
+        elseif selectedColor.secondary then
+            local primary, _ = GetVehicleColours(veh)
+            SetVehicleColours(veh, primary, selectedColor.secondary)
+        end
+        
+        CleanVehicle(veh)  -- Make sure the vehicle is clean
         exports['LegacyFuel']:SetFuel(veh, 100)
         TriggerEvent('vehiclekeys:client:SetOwner', vehPlate)
         TaskWarpPedIntoVehicle(PlayerPedId(), veh, -1)
         SetVehicleEngineOn(veh, true, true, false)
+        
+        -- Reset showroom vehicle to default after purchase
+        if shopName and vehicleIndex then
+            Wait(1000)  -- Small delay to ensure player is in vehicle
+            ResetShowroomVehicle(shopName, vehicleIndex)
+        end
     end, plate, vehicle, Config.Shops[tempShop]['VehicleSpawn'], true)
 end)
 

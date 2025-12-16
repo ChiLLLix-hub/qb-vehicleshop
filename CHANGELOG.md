@@ -1,5 +1,82 @@
 # Changelog - Modern NUI Update
 
+## Version 3.1.0 - Preview Mode with Camera & Color Picker
+
+### 🎨 New Features
+
+#### Preview Mode System
+- **Player Invisibility**: Players become invisible to themselves and others when browsing vehicles
+- **Preview Camera**: Smooth camera transitions to configurable positions per shop
+- **Client-Side Previews**: Vehicle swaps only visible to the interacting player
+- **Original Showroom Preservation**: Other players see original showroom vehicles
+
+#### Vehicle Customization
+- **360° Rotation**: Interactive slider for rotating preview vehicles
+- **Color Picker**: Real-time color preview with 12 popular color options
+- **Color Application**: Selected colors applied to purchased vehicles
+- **Clean Vehicles**: All spawned vehicles (test drive, purchase) automatically cleaned from dirt
+
+#### Configuration Options
+- **Config.EnablePreviewCamera**: Toggle camera system on/off
+- **Config.PreviewCameraRotation**: Toggle rotation slider on/off
+- **Config.PreviewModeForManagedShops**: Enable/disable preview mode for managed shops (cardealer jobs)
+- **PreviewCameraPos**: Configurable camera position per shop (vector4)
+
+#### Managed Shop Support
+- **Configurable Preview Mode**: Option to disable isolation features for managed shops
+- **Traditional Dealer Workflow**: Dealers stay visible and can demonstrate vehicles to customers
+- **Networked Vehicle Swaps**: When preview mode is disabled for managed shops, all players see vehicle swaps
+- **Rotation & Color Still Work**: Interactive features available without isolation
+- **Flexible Configuration**: Choose between immersive mode (free-use) and collaborative mode (managed)
+
+### 🔧 Technical Implementation
+
+#### New Components
+- `VehicleControls.jsx`: Rotation slider and color picker UI
+- Preview mode functions in client.lua
+- NUI callbacks for rotation and color
+
+#### Files Modified
+- `config.lua`: Added camera configuration for all shops
+- `client.lua`: Preview mode implementation with camera and vehicle management
+- `client_nui.lua`: Integration with preview mode
+- `server.lua`: Client-only vehicle swap handling
+- `html/src/App.jsx`: Added VehicleControls component
+
+#### New Documentation
+- `PREVIEW_MODE_DOCUMENTATION.md`: Complete feature documentation
+- `TESTING_GUIDE.md`: Comprehensive testing procedures
+
+### 🎯 Key Improvements
+- Better multiplayer experience (no interference between players)
+- Professional presentation with clean vehicles
+- Enhanced user engagement with interactive controls
+- Reduced server load (client-side previews)
+- Smooth camera transitions (500ms)
+
+### 📝 Configuration Examples
+
+```lua
+-- Global settings
+Config.EnablePreviewCamera = true
+Config.PreviewCameraRotation = true
+Config.PreviewModeForManagedShops = false  -- Recommended: disable for cardealer shops
+
+-- Per-shop camera position
+['pdm'] = {
+    -- ... other config
+    ['PreviewCameraPos'] = vector4(-48.31, -1095.76, 26.7, 320.16),
+}
+```
+
+### ⚙️ Performance Notes
+- Preview vehicles are not networked, reducing server load
+- Camera transitions are optimized
+- Proper cleanup prevents memory leaks
+- Original showroom vehicles preserved and restored
+
+---
+
 ## Version 3.0.0 - Modern React NUI
 
 ### 🎨 New Features

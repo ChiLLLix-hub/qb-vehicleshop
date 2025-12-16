@@ -17,6 +17,41 @@ This resource now features a **modern, responsive NUI** built with React.js, Vit
 
 ---
 
+## 🔨 Building the NUI
+
+The NUI is built using React.js, Vite, and Tailwind CSS. If you make changes to the NUI source files, you'll need to rebuild it.
+
+### Quick Build (Recommended)
+
+**Windows:**
+```batch
+build-nui.bat
+```
+
+**Linux/Mac:**
+```bash
+./build-nui.sh
+```
+
+### Manual Build
+
+If you prefer to build manually:
+
+```bash
+cd html
+npm install
+npm run build
+```
+
+The build scripts will:
+1. Install all required npm dependencies
+2. Build the production-ready NUI files
+3. Output compiled files to `html/dist/`
+
+**Note:** The compiled files in `html/dist/` are included in the repository, so you only need to build if you modify the NUI source code.
+
+---
+
 ## Original Features
 
 **Test Drives:**

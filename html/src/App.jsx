@@ -7,6 +7,7 @@ import CategoryGrid from './components/CategoryGrid';
 import VehicleGrid from './components/VehicleGrid';
 import FinanceModal from './components/FinanceModal';
 import TestDriveOverlay from './components/TestDriveOverlay';
+import VehicleControls from './components/VehicleControls';
 import './index.css';
 
 function App() {
@@ -17,6 +18,7 @@ function App() {
   const [config, setConfig] = useState({});
   const [testDriveActive, setTestDriveActive] = useState(false);
   const [testDriveTime, setTestDriveTime] = useState('0:00');
+  const [enableRotation, setEnableRotation] = useState(false);
 
   const visible = useVisibility();
 
@@ -39,6 +41,7 @@ function App() {
     debugLog('Opening vehicle menu', data);
     setCurrentVehicle(data.vehicle);
     setConfig(data.config || {});
+    setEnableRotation(data.config?.enableRotation || false);
     setCurrentView('vehicle');
   });
 
@@ -144,6 +147,11 @@ function App() {
               onSwap={handleSwap}
             />
           </div>
+        )}
+
+        {/* Vehicle Controls (Rotation & Color) */}
+        {currentView === 'vehicle' && currentVehicle && (
+          <VehicleControls enableRotation={enableRotation} />
         )}
 
         {/* Category Grid */}
