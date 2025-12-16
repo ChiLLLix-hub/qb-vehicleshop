@@ -45,6 +45,7 @@ Config.Shops = {
         ['VehicleSpawn'] = vector4(-56.79, -1109.85, 26.43, 71.5),   -- Spawn location when vehicle is bought
         ['TestDriveSpawn'] = vector4(-56.79, -1109.85, 26.43, 71.5), -- Spawn location for test drive
         ['PreviewCameraPos'] = vector4(-48.31, -1095.76, 26.7, 320.16), -- Camera position for vehicle preview
+        ['MonitorInteraction'] = vector3(-55.2, -1096.99, 26.61),   -- Monitor location for free-use interaction
         ['FinanceZone'] = vector3(-29.53, -1103.67, 26.42),          -- Where the finance menu is located
         ['ShowroomVehicles'] = {
             [1] = {

@@ -215,16 +215,6 @@ function StartPreviewMode()
     end
     
     inPreviewMode = true
-    wasInvisible = false
-    
-    -- Make player invisible
-    local ped = PlayerPedId()
-    SetEntityVisible(ped, false, false)
-    SetEntityCollision(ped, false, false)
-    SetEntityAlpha(ped, 0, false)
-    
-    -- Network sync invisibility for other players
-    NetworkSetEntityInvisibleToNetwork(ped, true)
     
     -- Create camera if configured
     if Config.EnablePreviewCamera and Config.Shops[insideShop] and Config.Shops[insideShop]['PreviewCameraPos'] then
@@ -237,7 +227,8 @@ function StartPreviewMode()
     end
     
     -- Get the current showroom vehicle and hide it (replace with client-side preview)
-    if insideShop and ClosestVehicle then
+    -- Only for free-use shops
+    if insideShop and ClosestVehicle and Config.Shops[insideShop]['Type'] == 'free-use' then
         local vehCoords = Config.Shops[insideShop]['ShowroomVehicles'][ClosestVehicle].coords
         local closestVeh = GetClosestVehicle(vehCoords.x, vehCoords.y, vehCoords.z, 3.0, 0, 70)
         if DoesEntityExist(closestVeh) then
@@ -274,15 +265,6 @@ end
 function StopPreviewMode()
     if not inPreviewMode then return end
     inPreviewMode = false
-    
-    -- Restore player visibility
-    local ped = PlayerPedId()
-    SetEntityVisible(ped, true, false)
-    SetEntityCollision(ped, true, true)
-    ResetEntityAlpha(ped)
-    
-    -- Network sync visibility for other players
-    NetworkSetEntityInvisibleToNetwork(ped, false)
     
     -- Destroy camera
     if previewCam then
@@ -424,6 +406,12 @@ local function startTestDriveTimer(testDriveTime, prevCoords)
 end
 
 local function createVehZones(shopName, entity)
+    -- Only create vehicle interaction zones for managed shops
+    local shopType = Config.Shops[shopName] and Config.Shops[shopName]['Type']
+    if shopType ~= 'managed' then
+        return
+    end
+    
     if not Config.UsingTarget then
         for i = 1, #Config.Shops[shopName]['ShowroomVehicles'] do
             zones[#zones + 1] = BoxZone:Create(
@@ -460,13 +448,45 @@ local function createVehZones(shopName, entity)
                     label = Lang:t('general.vehinteraction'),
                     canInteract = function()
                         local closestShop = insideShop
-                        return closestShop and (Config.Shops[closestShop]['Job'] == 'none' or PlayerData.job.name == Config.Shops[closestShop]['Job'])
+                        return closestShop and PlayerData.job.name == Config.Shops[closestShop]['Job']
                     end
                 },
             },
             distance = 3.0
         })
     end
+end
+
+-- Create monitor interaction for free-use shops
+local function createMonitorInteraction(shopName)
+    local shop = Config.Shops[shopName]
+    if not shop or shop['Type'] ~= 'free-use' or not shop['MonitorInteraction'] then
+        return
+    end
+    
+    local monitorCoords = shop['MonitorInteraction']
+    
+    exports['qb-target']:AddBoxZone('vehicleshop_monitor_' .. shopName, monitorCoords, 1.0, 1.0, {
+        name = 'vehicleshop_monitor_' .. shopName,
+        heading = 330.08,
+        debugPoly = false,
+        minZ = monitorCoords.z - 0.5,
+        maxZ = monitorCoords.z + 0.5,
+    }, {
+        options = {
+            {
+                type = 'client',
+                event = 'qb-vehicleshop:client:openMonitorMenu',
+                icon = 'fas fa-desktop',
+                label = 'Browse Vehicles',
+                shopName = shopName,
+                canInteract = function()
+                    return insideShop == shopName
+                end
+            },
+        },
+        distance = 2.0
+    })
 end
 
 -- Zones
@@ -483,19 +503,16 @@ local function createFreeUseShop(shopShape, name)
             CreateThread(function()
                 while insideShop do
                     setClosestShowroomVehicle()
-                    -- Show help text only if not using target system
-                    if not Config.UsingTarget then
-                        drawTxt('[E] - ' .. getVehBrand():upper() .. ' ' .. getVehName():upper() .. ' - $' .. getVehPrice(), 4, 0.5, 0.93, 0.50, 255, 255, 255, 180)
-                        
-                        -- Check if E is pressed to open NUI
-                        if IsControlJustPressed(0, Keys.E) then
-                            OpenVehicleNUI(getCurrentVehicleData())
-                        end
-                    end
+                    -- Free-use shops don't show help text, they use monitor interaction
                     Wait(0)
                 end
             end)
         else
+            insideShop = nil
+            ClosestVehicle = 1
+        end
+    end)
+end
             insideShop = nil
             ClosestVehicle = 1
         end
@@ -559,6 +576,9 @@ function Init()
         for name, shop in pairs(Config.Shops) do
             if shop['Type'] == 'free-use' then
                 createFreeUseShop(shop['Zone']['Shape'], name)
+                if Config.UsingTarget then
+                    createMonitorInteraction(name)
+                end
             elseif shop['Type'] == 'managed' then
                 createManagedShop(shop['Zone']['Shape'], name)
             end
@@ -598,6 +618,14 @@ end)
 
 RegisterNetEvent('qb-vehicleshop:client:showVehOptions', function()
     OpenVehicleNUI(getCurrentVehicleData())
+end)
+
+RegisterNetEvent('qb-vehicleshop:client:openMonitorMenu', function(data)
+    -- This event is triggered when player interacts with the monitor
+    -- Make sure we're in the right shop
+    if insideShop and insideShop == data.shopName then
+        OpenVehicleNUI(getCurrentVehicleData())
+    end
 end)
 
 RegisterNetEvent('qb-vehicleshop:client:TestDrive', function()
