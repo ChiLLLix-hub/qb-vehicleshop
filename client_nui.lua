@@ -102,6 +102,12 @@ end
 function CloseNUI()
     if not nuiOpen then return end
     nuiOpen = false
+    
+    -- Reset showroom vehicle to default before stopping preview mode
+    if insideShop and ClosestVehicle then
+        ResetShowroomVehicle(insideShop, ClosestVehicle)
+    end
+    
     StopPreviewMode()  -- Stop preview mode and restore player visibility
     SetNuiFocus(false, false)
     SendNUIMessage({
@@ -173,7 +179,7 @@ RegisterNUICallback('selectCategory', function(data, cb)
 end)
 
 RegisterNUICallback('selectVehicle', function(data, cb)
-    CloseNUI()
+    -- Don't close NUI - keep menu open for swapping
     if data.vehicle then
         TriggerServerEvent('qb-vehicleshop:server:swapVehicle', {
             toVehicle = data.vehicle.model,

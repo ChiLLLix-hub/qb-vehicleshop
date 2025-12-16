@@ -343,6 +343,28 @@ function CleanVehicle(vehicle)
     end
 end
 
+-- Reset showroom vehicle to default
+function ResetShowroomVehicle(shopName, vehicleIndex)
+    if not shopName or not vehicleIndex then return end
+    if not Config.Shops[shopName] or not Config.Shops[shopName]['ShowroomVehicles'][vehicleIndex] then return end
+    
+    local defaultVehicle = Config.Shops[shopName]['ShowroomVehicles'][vehicleIndex].defaultVehicle
+    if not defaultVehicle then return end
+    
+    -- Reset the chosen vehicle back to default
+    Config.Shops[shopName]['ShowroomVehicles'][vehicleIndex].chosenVehicle = defaultVehicle
+    
+    -- Trigger swap back to default vehicle (server will handle the actual swap)
+    TriggerServerEvent('qb-vehicleshop:server:swapVehicle', {
+        toVehicle = defaultVehicle,
+        ClosestVehicle = vehicleIndex,
+        ClosestShop = shopName,
+        catName = nil,  -- Not needed for reset
+        make = nil,
+        onecat = nil
+    })
+end
+
 local function createTestDriveReturn()
     testDriveZone = BoxZone:Create(
         Config.Shops[insideShop]['ReturnLocation'],
@@ -906,10 +928,10 @@ RegisterNetEvent('qb-vehicleshop:client:swapVehicle', function(data)
         previewVehicle = CreateVehicle(model, vehCoords.x, vehCoords.y, vehCoords.z, false, false)
         SetModelAsNoLongerNeeded(model)
         SetVehicleOnGroundProperly(previewVehicle)
-        SetEntityInvincible(previewVehicle, true)
         SetEntityHeading(previewVehicle, currentVehicleRotation or vehCoords.w)
+        SetEntityCollision(previewVehicle, false, false)  -- Disable collision - players can walk through
+        SetEntityInvincible(previewVehicle, true)
         SetVehicleDoorsLocked(previewVehicle, 3)
-        FreezeEntityPosition(previewVehicle, true)
         SetVehicleHasBeenOwnedByPlayer(previewVehicle, false)
         CleanVehicle(previewVehicle)
         
@@ -960,6 +982,9 @@ end)
 
 RegisterNetEvent('qb-vehicleshop:client:buyShowroomVehicle', function(vehicle, plate)
     tempShop = insideShop -- temp hacky way of setting the shop because it changes after the callback has returned since you are outside the zone
+    local shopName = tempShop
+    local vehicleIndex = ClosestVehicle
+    
     StopPreviewMode()  -- Exit preview mode and restore player visibility
     
     QBCore.Functions.TriggerCallback('qb-vehicleshop:server:spawnvehicle', function(netId, properties, vehPlate)
@@ -984,6 +1009,12 @@ RegisterNetEvent('qb-vehicleshop:client:buyShowroomVehicle', function(vehicle, p
         TriggerEvent('vehiclekeys:client:SetOwner', vehPlate)
         TaskWarpPedIntoVehicle(PlayerPedId(), veh, -1)
         SetVehicleEngineOn(veh, true, true, false)
+        
+        -- Reset showroom vehicle to default after purchase
+        if shopName and vehicleIndex then
+            Wait(1000)  -- Small delay to ensure player is in vehicle
+            ResetShowroomVehicle(shopName, vehicleIndex)
+        end
     end, plate, vehicle, Config.Shops[tempShop]['VehicleSpawn'], true)
 end)
 
