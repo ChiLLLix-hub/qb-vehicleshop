@@ -238,24 +238,24 @@ function StartPreviewMode()
             SetEntityAlpha(closestVeh, 0, false)
             SetEntityVisible(closestVeh, false, false)
             
-            -- Create a client-side preview vehicle
+            -- Create a client-side preview vehicle (visual only, no collision)
             local model = GetHashKey(Config.Shops[insideShop]['ShowroomVehicles'][ClosestVehicle].chosenVehicle)
             RequestModel(model)
             while not HasModelLoaded(model) do
                 Wait(50)
             end
             
+            -- Create as vehicle to support colors, but disable collision for visual-only preview
             previewVehicle = CreateVehicle(model, vehCoords.x, vehCoords.y, vehCoords.z, false, false)
             SetModelAsNoLongerNeeded(model)
             SetVehicleOnGroundProperly(previewVehicle)
-            SetEntityInvincible(previewVehicle, true)
             SetEntityHeading(previewVehicle, vehCoords.w)
+            SetEntityCollision(previewVehicle, false, false)  -- Disable collision - players can walk through
+            SetEntityInvincible(previewVehicle, true)
             SetVehicleDoorsLocked(previewVehicle, 3)
-            FreezeEntityPosition(previewVehicle, true)
             SetVehicleHasBeenOwnedByPlayer(previewVehicle, false)
             CleanVehicle(previewVehicle)
-            
-            -- Vehicle is already client-side only (4th param of CreateVehicle is false)
+            -- Not using FreezeEntityPosition - vehicle stays in place due to no collision/physics
             
             currentVehicleRotation = GetEntityHeading(previewVehicle)
         end
