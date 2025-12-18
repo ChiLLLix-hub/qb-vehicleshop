@@ -122,7 +122,6 @@ function CloseNUIWithoutReset()
     nuiOpen = false
     
     -- Don't reset vehicle - preserve choice for test drive/buy
-    
     StopPreviewMode()  -- Stop preview mode and restore player visibility
     SetNuiFocus(false, false)
     SendNUIMessage({
