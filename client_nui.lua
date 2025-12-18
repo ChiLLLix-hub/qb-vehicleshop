@@ -153,25 +153,72 @@ RegisterNUICallback('testDrive', function(data, cb)
 end)
 
 RegisterNUICallback('buyVehicle', function(data, cb)
-    CloseNUI()
     if data.vehicle then
-        TriggerServerEvent('qb-vehicleshop:server:buyShowroomVehicle', {
-            buyVehicle = data.vehicle.model
-        })
+        -- Show confirmation menu
+        local confirmMenu = {
+            {
+                header = 'Purchase Vehicle',
+                txt = 'Are you sure you want to buy ' .. data.vehicle.brand .. ' ' .. data.vehicle.name .. ' for $' .. data.vehicle.price .. '?',
+                params = {
+                    isMenuHeader = true
+                }
+            },
+            {
+                header = 'CONFIRM',
+                txt = 'Yes, purchase this vehicle',
+                params = {
+                    event = 'qb-vehicleshop:client:confirmBuy',
+                    args = {
+                        model = data.vehicle.model
+                    }
+                }
+            },
+            {
+                header = 'CANCEL',
+                txt = 'No, go back',
+                params = {
+                    event = 'qb-vehicleshop:client:cancelPurchase'
+                }
+            }
+        }
+        exports['qb-menu']:openMenu(confirmMenu)
     end
     cb('ok')
 end)
 
 RegisterNUICallback('financeVehicle', function(data, cb)
-    CloseNUI()
     if data.vehicle then
-        local financeData = {
-            vehicle = data.vehicle.model,
-            price = data.vehicle.price,
-            downPayment = data.downPayment,
-            paymentAmount = data.paymentAmount
+        -- Show confirmation menu
+        local confirmMenu = {
+            {
+                header = 'Finance Vehicle',
+                txt = 'Are you sure you want to finance ' .. data.vehicle.brand .. ' ' .. data.vehicle.name .. '?<br>Down Payment: $' .. data.downPayment .. '<br>Monthly Payments: ' .. data.paymentAmount,
+                params = {
+                    isMenuHeader = true
+                }
+            },
+            {
+                header = 'CONFIRM',
+                txt = 'Yes, finance this vehicle',
+                params = {
+                    event = 'qb-vehicleshop:client:confirmFinance',
+                    args = {
+                        model = data.vehicle.model,
+                        price = data.vehicle.price,
+                        downPayment = data.downPayment,
+                        paymentAmount = data.paymentAmount
+                    }
+                }
+            },
+            {
+                header = 'CANCEL',
+                txt = 'No, go back',
+                params = {
+                    event = 'qb-vehicleshop:client:cancelPurchase'
+                }
+            }
         }
-        TriggerServerEvent('qb-vehicleshop:server:financeVehicle', financeData)
+        exports['qb-menu']:openMenu(confirmMenu)
     end
     cb('ok')
 end)
@@ -224,16 +271,4 @@ RegisterNUICallback('returnTestDrive', function(data, cb)
     cb('ok')
 end)
 
-RegisterNUICallback('rotateVehicle', function(data, cb)
-    if data.rotation then
-        RotatePreviewVehicle(data.rotation)
-    end
-    cb('ok')
-end)
-
-RegisterNUICallback('setVehicleColor', function(data, cb)
-    if data.colorIndex and data.colorType then
-        SetPreviewVehicleColor(data.colorIndex, data.colorType)
-    end
-    cb('ok')
-end)
+-- Rotation and color sliders removed per user request

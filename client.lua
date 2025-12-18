@@ -964,11 +964,7 @@ RegisterNetEvent('qb-vehicleshop:client:swapVehicle', function(data)
             SetVehicleColours(previewVehicle, primary, selectedColor.secondary)
         end
         
-        -- After swap, open the main vehicle menu to show controls (slider, color picker)
-        Wait(100)  -- Small delay to ensure vehicle is fully spawned
-        TransitionMenu()  -- Close current menu without stopping preview mode
-        Wait(50)
-        OpenVehicleNUI(getCurrentVehicleData())
+        -- Don't reopen menu - let user continue browsing vehicle list
     else
         -- Not in preview mode, update showroom vehicle normally
         local closestVehicle, closestDistance = QBCore.Functions.GetClosestVehicle(vector3(Config.Shops[shopName]['ShowroomVehicles'][data.ClosestVehicle].coords.x, Config.Shops[shopName]['ShowroomVehicles'][data.ClosestVehicle].coords.y, Config.Shops[shopName]['ShowroomVehicles'][data.ClosestVehicle].coords.z))
@@ -1164,6 +1160,29 @@ RegisterNetEvent('qb-vehicleshop:client:openIdMenu', function(data)
         elseif data.type == 'sellVehicle' then
             TriggerServerEvent('qb-vehicleshop:server:sellShowroomVehicle', data.vehicle, dialog.playerid)
         end
+    end
+end)
+
+-- Purchase confirmation events
+RegisterNetEvent('qb-vehicleshop:client:confirmBuy', function(data)
+    exports['qb-menu']:closeMenu()
+    CloseNUIWithoutReset()
+    TriggerServerEvent('qb-vehicleshop:server:buyShowroomVehicle', {
+        buyVehicle = data.model
+    })
+end)
+
+RegisterNetEvent('qb-vehicleshop:client:confirmFinance', function(data)
+    exports['qb-menu']:closeMenu()
+    CloseNUIWithoutReset()
+    TriggerServerEvent('qb-vehicleshop:server:financeVehicle', data.downPayment, data.paymentAmount, data.model)
+end)
+
+RegisterNetEvent('qb-vehicleshop:client:cancelPurchase', function()
+    exports['qb-menu']:closeMenu()
+    -- Reopen the vehicle menu
+    if insideShop and ClosestVehicle then
+        OpenVehicleNUI(getCurrentVehicleData())
     end
 end)
 
