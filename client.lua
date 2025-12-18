@@ -966,8 +966,12 @@ RegisterNetEvent('qb-vehicleshop:client:swapVehicle', function(data)
         
         -- Reopen vehicle list to ensure it stays visible after swap
         Wait(100)  -- Small delay to ensure vehicle is fully spawned
-        if currentCategoryContext and currentCategoryContext.catName then
-            TriggerEvent('qb-vehicleshop:client:openVehCats', currentCategoryContext)
+        if data.catName then
+            TriggerEvent('qb-vehicleshop:client:openVehCats', {
+                catName = data.catName,
+                make = data.make,
+                onecat = data.onecat
+            })
         end
     else
         -- Not in preview mode, update showroom vehicle normally
