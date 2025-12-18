@@ -250,12 +250,12 @@ function StartPreviewMode()
             SetModelAsNoLongerNeeded(model)
             SetVehicleOnGroundProperly(previewVehicle)
             SetEntityHeading(previewVehicle, vehCoords.w)
+            FreezeEntityPosition(previewVehicle, true)  -- Freeze position to prevent sinking
             SetEntityCollision(previewVehicle, false, false)  -- Disable collision - players can walk through
             SetEntityInvincible(previewVehicle, true)
             SetVehicleDoorsLocked(previewVehicle, 3)
             SetVehicleHasBeenOwnedByPlayer(previewVehicle, false)
             CleanVehicle(previewVehicle)
-            -- Not using FreezeEntityPosition - vehicle stays in place due to no collision/physics
             
             currentVehicleRotation = GetEntityHeading(previewVehicle)
         end
@@ -937,6 +937,7 @@ RegisterNetEvent('qb-vehicleshop:client:swapVehicle', function(data)
         SetModelAsNoLongerNeeded(model)
         SetEntityHeading(previewVehicle, currentVehicleRotation or vehCoords.w)
         SetVehicleOnGroundProperly(previewVehicle)
+        FreezeEntityPosition(previewVehicle, true)  -- Freeze position to prevent sinking
         SetEntityCollision(previewVehicle, false, false)  -- Disable collision - players can walk through
         SetEntityInvincible(previewVehicle, true)
         SetVehicleDoorsLocked(previewVehicle, 3)
