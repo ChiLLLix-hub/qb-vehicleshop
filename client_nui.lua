@@ -116,6 +116,21 @@ function CloseNUI()
     })
 end
 
+-- Close NUI without resetting vehicle (for test drive/buy operations)
+function CloseNUIWithoutReset()
+    if not nuiOpen then return end
+    nuiOpen = false
+    
+    -- Don't reset vehicle - preserve choice for test drive/buy
+    
+    StopPreviewMode()  -- Stop preview mode and restore player visibility
+    SetNuiFocus(false, false)
+    SendNUIMessage({
+        action = 'setVisible',
+        visible = false
+    })
+end
+
 -- Transition menu without stopping preview mode (for swap workflow)
 function TransitionMenu()
     nuiOpen = false
@@ -132,11 +147,8 @@ RegisterNUICallback('closeUI', function(data, cb)
 end)
 
 RegisterNUICallback('testDrive', function(data, cb)
-    -- Don't call CloseNUI as it resets the vehicle to default
-    -- Use TransitionMenu to close without resetting, then trigger test drive
-    TransitionMenu()
-    StopPreviewMode()  -- Stop preview mode before test drive
-    SetNuiFocus(false, false)  -- Remove NUI focus
+    -- Close NUI without resetting vehicle to preserve choice for test drive
+    CloseNUIWithoutReset()
     TriggerEvent('qb-vehicleshop:client:TestDrive')
     cb('ok')
 end)
