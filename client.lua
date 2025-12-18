@@ -248,8 +248,8 @@ function StartPreviewMode()
             -- Create as vehicle to support colors, but disable collision for visual-only preview
             previewVehicle = CreateVehicle(model, vehCoords.x, vehCoords.y, vehCoords.z, false, false)
             SetModelAsNoLongerNeeded(model)
-            SetVehicleOnGroundProperly(previewVehicle)
             SetEntityHeading(previewVehicle, vehCoords.w)
+            SetVehicleOnGroundProperly(previewVehicle)
             FreezeEntityPosition(previewVehicle, true)  -- Freeze position to prevent sinking
             SetEntityCollision(previewVehicle, false, false)  -- Disable collision - players can walk through
             SetEntityInvincible(previewVehicle, true)
