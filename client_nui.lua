@@ -116,6 +116,15 @@ function CloseNUI()
     })
 end
 
+-- Transition menu without stopping preview mode (for swap workflow)
+function TransitionMenu()
+    nuiOpen = false
+    SendNUIMessage({
+        action = 'setVisible',
+        visible = false
+    })
+end
+
 -- NUI Callbacks
 RegisterNUICallback('closeUI', function(data, cb)
     CloseNUI()
@@ -154,12 +163,7 @@ end)
 
 RegisterNUICallback('swapVehicle', function(data, cb)
     -- Don't close NUI or stop preview mode - just transition to category menu
-    nuiOpen = false  -- Mark as not open so the category menu can open
-    -- Send close message to hide current menu view
-    SendNUIMessage({
-        action = 'setVisible',
-        visible = false
-    })
+    TransitionMenu()
     if Config.FilterByMake then
         TriggerEvent('qb-vehicleshop:client:vehMakes')
     else
@@ -170,12 +174,7 @@ end)
 
 RegisterNUICallback('selectCategory', function(data, cb)
     -- Don't close NUI or stop preview mode - just transition to vehicle list
-    nuiOpen = false  -- Mark as not open so the vehicle list menu can open
-    -- Send close message to hide current menu view
-    SendNUIMessage({
-        action = 'setVisible',
-        visible = false
-    })
+    TransitionMenu()
     if data.category then
         -- Check if it's a make or category based on type
         -- Makes will have a 'type' property set to 'make'

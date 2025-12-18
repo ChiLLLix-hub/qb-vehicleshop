@@ -958,11 +958,7 @@ RegisterNetEvent('qb-vehicleshop:client:swapVehicle', function(data)
         
         -- After swap, open the main vehicle menu to show controls (slider, color picker)
         Wait(100)  -- Small delay to ensure vehicle is fully spawned
-        nuiOpen = false  -- Allow menu to open
-        SendNUIMessage({
-            action = 'setVisible',
-            visible = false
-        })
+        TransitionMenu()  -- Close current menu without stopping preview mode
         Wait(50)
         OpenVehicleNUI(getCurrentVehicleData())
     else
