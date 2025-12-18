@@ -300,7 +300,10 @@ function RotatePreviewVehicle(rotation)
     -- If in preview mode, rotate the preview vehicle
     if inPreviewMode and previewVehicle and DoesEntityExist(previewVehicle) then
         currentVehicleRotation = rotation
+        -- Unfreeze to allow rotation, then freeze again
+        FreezeEntityPosition(previewVehicle, false)
         SetEntityHeading(previewVehicle, rotation)
+        FreezeEntityPosition(previewVehicle, true)
     -- If not in preview mode (managed shops), rotate the showroom vehicle
     elseif insideShop and ClosestVehicle then
         local vehCoords = Config.Shops[insideShop]['ShowroomVehicles'][ClosestVehicle].coords

@@ -132,7 +132,11 @@ RegisterNUICallback('closeUI', function(data, cb)
 end)
 
 RegisterNUICallback('testDrive', function(data, cb)
-    CloseNUI()
+    -- Don't call CloseNUI as it resets the vehicle to default
+    -- Use TransitionMenu to close without resetting, then trigger test drive
+    TransitionMenu()
+    StopPreviewMode()  -- Stop preview mode before test drive
+    SetNuiFocus(false, false)  -- Remove NUI focus
     TriggerEvent('qb-vehicleshop:client:TestDrive')
     cb('ok')
 end)
