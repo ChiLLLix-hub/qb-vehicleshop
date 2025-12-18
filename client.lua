@@ -219,9 +219,15 @@ function StartPreviewMode()
     -- Create camera if configured
     if Config.EnablePreviewCamera and Config.Shops[insideShop] and Config.Shops[insideShop]['PreviewCameraPos'] then
         local camPos = Config.Shops[insideShop]['PreviewCameraPos']
+        local camRot = Config.Shops[insideShop]['PreviewCameraRot']
         previewCam = CreateCam('DEFAULT_SCRIPTED_CAMERA', true)
         SetCamCoord(previewCam, camPos.x, camPos.y, camPos.z)
-        SetCamRot(previewCam, 0.0, 0.0, camPos.w, 2)
+        -- Use custom rotation if configured, otherwise use default
+        if camRot then
+            SetCamRot(previewCam, camRot.x, 0.0, camPos.w + camRot.y, 2) -- tilt, roll, pan+heading
+        else
+            SetCamRot(previewCam, 0.0, 0.0, camPos.w, 2)
+        end
         SetCamActive(previewCam, true)
         RenderScriptCams(true, true, 500, true, true)
     end
