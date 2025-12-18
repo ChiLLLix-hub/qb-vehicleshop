@@ -57,6 +57,24 @@ function OpenVehicleListNUI(vehicles, categoryContext)
     })
 end
 
+-- Refresh vehicle list (even if NUI is already open)
+function RefreshVehicleListNUI(vehicles, categoryContext)
+    nuiOpen = true
+    -- Store category context for vehicle selection
+    if categoryContext then
+        currentCategoryContext = categoryContext
+    end
+    SetNuiFocus(true, true)
+    SendNUIMessage({
+        action = 'setVisible',
+        visible = true
+    })
+    SendNUIMessage({
+        action = 'openVehicleList',
+        vehicles = vehicles
+    })
+end
+
 -- Open finance menu
 function OpenFinanceNUI(vehicleData)
     if nuiOpen then return end

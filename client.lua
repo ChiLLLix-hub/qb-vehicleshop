@@ -819,11 +819,20 @@ RegisterNetEvent('qb-vehicleshop:client:openVehCats', function(data)
     end
     
     -- Pass category context to NUI
-    OpenVehicleListNUI(vehicles, {
-        catName = data.catName,
-        make = data.make,
-        onecat = data.onecat
-    })
+    -- Use refresh if called during a swap (data.refresh flag), otherwise use normal open
+    if data.refresh then
+        RefreshVehicleListNUI(vehicles, {
+            catName = data.catName,
+            make = data.make,
+            onecat = data.onecat
+        })
+    else
+        OpenVehicleListNUI(vehicles, {
+            catName = data.catName,
+            make = data.make,
+            onecat = data.onecat
+        })
+    end
 end)
 
 RegisterNetEvent('qb-vehicleshop:client:vehMakes', function()
@@ -976,7 +985,8 @@ RegisterNetEvent('qb-vehicleshop:client:swapVehicle', function(data)
             TriggerEvent('qb-vehicleshop:client:openVehCats', {
                 catName = data.catName,
                 make = data.make,
-                onecat = data.onecat
+                onecat = data.onecat,
+                refresh = true  -- Flag to use refresh instead of open
             })
         end
     else
