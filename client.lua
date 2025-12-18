@@ -971,7 +971,7 @@ RegisterNetEvent('qb-vehicleshop:client:swapVehicle', function(data)
         end
         local veh = CreateVehicle(model, Config.Shops[shopName]['ShowroomVehicles'][data.ClosestVehicle].coords.x, Config.Shops[shopName]['ShowroomVehicles'][data.ClosestVehicle].coords.y, Config.Shops[shopName]['ShowroomVehicles'][data.ClosestVehicle].coords.z, false, false)
         while not DoesEntityExist(veh) do
-            Wait(50)
+            Wait(10)
         end
         SetModelAsNoLongerNeeded(model)
         SetEntityHeading(veh, Config.Shops[shopName]['ShowroomVehicles'][data.ClosestVehicle].coords.w)
