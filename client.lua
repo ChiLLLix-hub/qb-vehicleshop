@@ -955,6 +955,16 @@ RegisterNetEvent('qb-vehicleshop:client:swapVehicle', function(data)
             local primary, _ = GetVehicleColours(previewVehicle)
             SetVehicleColours(previewVehicle, primary, selectedColor.secondary)
         end
+        
+        -- After swap, open the main vehicle menu to show controls (slider, color picker)
+        Wait(100)  -- Small delay to ensure vehicle is fully spawned
+        nuiOpen = false  -- Allow menu to open
+        SendNUIMessage({
+            action = 'setVisible',
+            visible = false
+        })
+        Wait(50)
+        OpenVehicleNUI(getCurrentVehicleData())
     else
         -- Not in preview mode, update showroom vehicle normally
         local closestVehicle, closestDistance = QBCore.Functions.GetClosestVehicle(vector3(Config.Shops[shopName]['ShowroomVehicles'][data.ClosestVehicle].coords.x, Config.Shops[shopName]['ShowroomVehicles'][data.ClosestVehicle].coords.y, Config.Shops[shopName]['ShowroomVehicles'][data.ClosestVehicle].coords.z))
