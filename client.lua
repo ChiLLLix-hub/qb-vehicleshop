@@ -612,11 +612,11 @@ function Init()
                 end
                 local veh = CreateVehicle(model, Config.Shops[k]['ShowroomVehicles'][i].coords.x, Config.Shops[k]['ShowroomVehicles'][i].coords.y, Config.Shops[k]['ShowroomVehicles'][i].coords.z, false, false)
                 SetModelAsNoLongerNeeded(model)
+                SetEntityHeading(veh, Config.Shops[k]['ShowroomVehicles'][i].coords.w)
                 SetVehicleOnGroundProperly(veh)
                 SetEntityInvincible(veh, true)
                 SetVehicleDirtLevel(veh, 0.0)
                 SetVehicleDoorsLocked(veh, 3)
-                SetEntityHeading(veh, Config.Shops[k]['ShowroomVehicles'][i].coords.w)
                 FreezeEntityPosition(veh, true)
                 SetEntityAsMissionEntity(veh, true, true)  -- Protect from deletion
                 SetVehicleHasBeenOwnedByPlayer(veh, false)
