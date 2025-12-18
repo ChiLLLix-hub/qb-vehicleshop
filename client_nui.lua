@@ -153,7 +153,13 @@ RegisterNUICallback('financeVehicle', function(data, cb)
 end)
 
 RegisterNUICallback('swapVehicle', function(data, cb)
-    CloseNUI()
+    -- Don't close NUI or stop preview mode - just transition to category menu
+    nuiOpen = false  -- Mark as not open so the category menu can open
+    -- Send close message to hide current menu view
+    SendNUIMessage({
+        action = 'setVisible',
+        visible = false
+    })
     if Config.FilterByMake then
         TriggerEvent('qb-vehicleshop:client:vehMakes')
     else
@@ -163,7 +169,13 @@ RegisterNUICallback('swapVehicle', function(data, cb)
 end)
 
 RegisterNUICallback('selectCategory', function(data, cb)
-    CloseNUI()
+    -- Don't close NUI or stop preview mode - just transition to vehicle list
+    nuiOpen = false  -- Mark as not open so the vehicle list menu can open
+    -- Send close message to hide current menu view
+    SendNUIMessage({
+        action = 'setVisible',
+        visible = false
+    })
     if data.category then
         -- Check if it's a make or category based on type
         -- Makes will have a 'type' property set to 'make'

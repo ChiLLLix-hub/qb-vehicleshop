@@ -611,6 +611,10 @@ function Init()
                     Wait(0)
                 end
                 local veh = CreateVehicle(model, Config.Shops[k]['ShowroomVehicles'][i].coords.x, Config.Shops[k]['ShowroomVehicles'][i].coords.y, Config.Shops[k]['ShowroomVehicles'][i].coords.z, false, false)
+                -- Wait for entity to exist before setting properties
+                while not DoesEntityExist(veh) do
+                    Wait(10)
+                end
                 SetModelAsNoLongerNeeded(model)
                 SetEntityHeading(veh, Config.Shops[k]['ShowroomVehicles'][i].coords.w)
                 SetVehicleOnGroundProperly(veh)
@@ -926,6 +930,10 @@ RegisterNetEvent('qb-vehicleshop:client:swapVehicle', function(data)
         end
         
         previewVehicle = CreateVehicle(model, vehCoords.x, vehCoords.y, vehCoords.z, false, false)
+        -- Wait for entity to exist before setting properties
+        while not DoesEntityExist(previewVehicle) do
+            Wait(10)
+        end
         SetModelAsNoLongerNeeded(model)
         SetEntityHeading(previewVehicle, currentVehicleRotation or vehCoords.w)
         SetVehicleOnGroundProperly(previewVehicle)
