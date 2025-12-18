@@ -271,4 +271,14 @@ RegisterNUICallback('returnTestDrive', function(data, cb)
     cb('ok')
 end)
 
--- Rotation and color sliders removed per user request
+-- Rotation and color sliders callbacks kept as no-ops to prevent NUI errors
+-- Actual functionality removed per user request
+RegisterNUICallback('rotateVehicle', function(data, cb)
+    -- No-op: rotation slider removed per user request
+    cb('ok')
+end)
+
+RegisterNUICallback('setVehicleColor', function(data, cb)
+    -- No-op: color slider removed per user request
+    cb('ok')
+end)

@@ -964,7 +964,11 @@ RegisterNetEvent('qb-vehicleshop:client:swapVehicle', function(data)
             SetVehicleColours(previewVehicle, primary, selectedColor.secondary)
         end
         
-        -- Don't reopen menu - let user continue browsing vehicle list
+        -- Reopen vehicle list to ensure it stays visible after swap
+        Wait(100)  -- Small delay to ensure vehicle is fully spawned
+        if currentCategoryContext and currentCategoryContext.catName then
+            TriggerEvent('qb-vehicleshop:client:openVehCats', currentCategoryContext)
+        end
     else
         -- Not in preview mode, update showroom vehicle normally
         local closestVehicle, closestDistance = QBCore.Functions.GetClosestVehicle(vector3(Config.Shops[shopName]['ShowroomVehicles'][data.ClosestVehicle].coords.x, Config.Shops[shopName]['ShowroomVehicles'][data.ClosestVehicle].coords.y, Config.Shops[shopName]['ShowroomVehicles'][data.ClosestVehicle].coords.z))
