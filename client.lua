@@ -247,6 +247,10 @@ function StartPreviewMode()
             
             -- Create as vehicle to support colors, but disable collision for visual-only preview
             previewVehicle = CreateVehicle(model, vehCoords.x, vehCoords.y, vehCoords.z, false, false)
+            -- Wait for entity to exist before setting properties
+            while not DoesEntityExist(previewVehicle) do
+                Wait(10)
+            end
             SetModelAsNoLongerNeeded(model)
             SetEntityHeading(previewVehicle, vehCoords.w)
             SetVehicleOnGroundProperly(previewVehicle)
