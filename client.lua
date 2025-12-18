@@ -219,9 +219,15 @@ function StartPreviewMode()
     -- Create camera if configured
     if Config.EnablePreviewCamera and Config.Shops[insideShop] and Config.Shops[insideShop]['PreviewCameraPos'] then
         local camPos = Config.Shops[insideShop]['PreviewCameraPos']
+        local camRot = Config.Shops[insideShop]['PreviewCameraRot']
         previewCam = CreateCam('DEFAULT_SCRIPTED_CAMERA', true)
         SetCamCoord(previewCam, camPos.x, camPos.y, camPos.z)
-        SetCamRot(previewCam, 0.0, 0.0, camPos.w, 2)
+        -- Use custom rotation if configured, otherwise use default
+        if camRot then
+            SetCamRot(previewCam, camRot.x, 0.0, camPos.w + camRot.y, 2) -- tilt, roll, pan+heading
+        else
+            SetCamRot(previewCam, 0.0, 0.0, camPos.w, 2)
+        end
         SetCamActive(previewCam, true)
         RenderScriptCams(true, true, 500, true, true)
     end
@@ -247,15 +253,19 @@ function StartPreviewMode()
             
             -- Create as vehicle to support colors, but disable collision for visual-only preview
             previewVehicle = CreateVehicle(model, vehCoords.x, vehCoords.y, vehCoords.z, false, false)
+            -- Wait for entity to exist before setting properties
+            while not DoesEntityExist(previewVehicle) do
+                Wait(10)
+            end
             SetModelAsNoLongerNeeded(model)
-            SetVehicleOnGroundProperly(previewVehicle)
             SetEntityHeading(previewVehicle, vehCoords.w)
+            SetVehicleOnGroundProperly(previewVehicle)
+            FreezeEntityPosition(previewVehicle, true)  -- Freeze position to prevent sinking
             SetEntityCollision(previewVehicle, false, false)  -- Disable collision - players can walk through
             SetEntityInvincible(previewVehicle, true)
             SetVehicleDoorsLocked(previewVehicle, 3)
             SetVehicleHasBeenOwnedByPlayer(previewVehicle, false)
             CleanVehicle(previewVehicle)
-            -- Not using FreezeEntityPosition - vehicle stays in place due to no collision/physics
             
             currentVehicleRotation = GetEntityHeading(previewVehicle)
         end
@@ -296,7 +306,10 @@ function RotatePreviewVehicle(rotation)
     -- If in preview mode, rotate the preview vehicle
     if inPreviewMode and previewVehicle and DoesEntityExist(previewVehicle) then
         currentVehicleRotation = rotation
+        -- Unfreeze to allow rotation, then freeze again
+        FreezeEntityPosition(previewVehicle, false)
         SetEntityHeading(previewVehicle, rotation)
+        FreezeEntityPosition(previewVehicle, true)
     -- If not in preview mode (managed shops), rotate the showroom vehicle
     elseif insideShop and ClosestVehicle then
         local vehCoords = Config.Shops[insideShop]['ShowroomVehicles'][ClosestVehicle].coords
@@ -611,12 +624,16 @@ function Init()
                     Wait(0)
                 end
                 local veh = CreateVehicle(model, Config.Shops[k]['ShowroomVehicles'][i].coords.x, Config.Shops[k]['ShowroomVehicles'][i].coords.y, Config.Shops[k]['ShowroomVehicles'][i].coords.z, false, false)
+                -- Wait for entity to exist before setting properties
+                while not DoesEntityExist(veh) do
+                    Wait(10)
+                end
                 SetModelAsNoLongerNeeded(model)
+                SetEntityHeading(veh, Config.Shops[k]['ShowroomVehicles'][i].coords.w)
                 SetVehicleOnGroundProperly(veh)
                 SetEntityInvincible(veh, true)
                 SetVehicleDirtLevel(veh, 0.0)
                 SetVehicleDoorsLocked(veh, 3)
-                SetEntityHeading(veh, Config.Shops[k]['ShowroomVehicles'][i].coords.w)
                 FreezeEntityPosition(veh, true)
                 SetEntityAsMissionEntity(veh, true, true)  -- Protect from deletion
                 SetVehicleHasBeenOwnedByPlayer(veh, false)
@@ -802,11 +819,20 @@ RegisterNetEvent('qb-vehicleshop:client:openVehCats', function(data)
     end
     
     -- Pass category context to NUI
-    OpenVehicleListNUI(vehicles, {
-        catName = data.catName,
-        make = data.make,
-        onecat = data.onecat
-    })
+    -- Use refresh if called during a swap (data.refresh flag), otherwise use normal open
+    if data.refresh then
+        RefreshVehicleListNUI(vehicles, {
+            catName = data.catName,
+            make = data.make,
+            onecat = data.onecat
+        })
+    else
+        OpenVehicleListNUI(vehicles, {
+            catName = data.catName,
+            make = data.make,
+            onecat = data.onecat
+        })
+    end
 end)
 
 RegisterNetEvent('qb-vehicleshop:client:vehMakes', function()
@@ -926,9 +952,14 @@ RegisterNetEvent('qb-vehicleshop:client:swapVehicle', function(data)
         end
         
         previewVehicle = CreateVehicle(model, vehCoords.x, vehCoords.y, vehCoords.z, false, false)
+        -- Wait for entity to exist before setting properties
+        while not DoesEntityExist(previewVehicle) do
+            Wait(10)
+        end
         SetModelAsNoLongerNeeded(model)
-        SetVehicleOnGroundProperly(previewVehicle)
         SetEntityHeading(previewVehicle, currentVehicleRotation or vehCoords.w)
+        SetVehicleOnGroundProperly(previewVehicle)
+        FreezeEntityPosition(previewVehicle, true)  -- Freeze position to prevent sinking
         SetEntityCollision(previewVehicle, false, false)  -- Disable collision - players can walk through
         SetEntityInvincible(previewVehicle, true)
         SetVehicleDoorsLocked(previewVehicle, 3)
@@ -947,6 +978,17 @@ RegisterNetEvent('qb-vehicleshop:client:swapVehicle', function(data)
             local primary, _ = GetVehicleColours(previewVehicle)
             SetVehicleColours(previewVehicle, primary, selectedColor.secondary)
         end
+        
+        -- Reopen vehicle list to ensure it stays visible after swap
+        Wait(100)  -- Small delay to ensure vehicle is fully spawned
+        if data.catName then
+            TriggerEvent('qb-vehicleshop:client:openVehCats', {
+                catName = data.catName,
+                make = data.make,
+                onecat = data.onecat,
+                refresh = true  -- Flag to use refresh instead of open
+            })
+        end
     else
         -- Not in preview mode, update showroom vehicle normally
         local closestVehicle, closestDistance = QBCore.Functions.GetClosestVehicle(vector3(Config.Shops[shopName]['ShowroomVehicles'][data.ClosestVehicle].coords.x, Config.Shops[shopName]['ShowroomVehicles'][data.ClosestVehicle].coords.y, Config.Shops[shopName]['ShowroomVehicles'][data.ClosestVehicle].coords.z))
@@ -963,12 +1005,12 @@ RegisterNetEvent('qb-vehicleshop:client:swapVehicle', function(data)
         end
         local veh = CreateVehicle(model, Config.Shops[shopName]['ShowroomVehicles'][data.ClosestVehicle].coords.x, Config.Shops[shopName]['ShowroomVehicles'][data.ClosestVehicle].coords.y, Config.Shops[shopName]['ShowroomVehicles'][data.ClosestVehicle].coords.z, false, false)
         while not DoesEntityExist(veh) do
-            Wait(50)
+            Wait(10)
         end
         SetModelAsNoLongerNeeded(model)
+        SetEntityHeading(veh, Config.Shops[shopName]['ShowroomVehicles'][data.ClosestVehicle].coords.w)
         SetVehicleOnGroundProperly(veh)
         SetEntityInvincible(veh, true)
-        SetEntityHeading(veh, Config.Shops[shopName]['ShowroomVehicles'][data.ClosestVehicle].coords.w)
         SetVehicleDoorsLocked(veh, 3)
         FreezeEntityPosition(veh, true)
         SetEntityAsMissionEntity(veh, true, true)
@@ -1142,6 +1184,29 @@ RegisterNetEvent('qb-vehicleshop:client:openIdMenu', function(data)
         elseif data.type == 'sellVehicle' then
             TriggerServerEvent('qb-vehicleshop:server:sellShowroomVehicle', data.vehicle, dialog.playerid)
         end
+    end
+end)
+
+-- Purchase confirmation events
+RegisterNetEvent('qb-vehicleshop:client:confirmBuy', function(data)
+    exports['qb-menu']:closeMenu()
+    CloseNUIWithoutReset()
+    TriggerServerEvent('qb-vehicleshop:server:buyShowroomVehicle', {
+        buyVehicle = data.model
+    })
+end)
+
+RegisterNetEvent('qb-vehicleshop:client:confirmFinance', function(data)
+    exports['qb-menu']:closeMenu()
+    CloseNUIWithoutReset()
+    TriggerServerEvent('qb-vehicleshop:server:financeVehicle', data.downPayment, data.paymentAmount, data.model)
+end)
+
+RegisterNetEvent('qb-vehicleshop:client:cancelPurchase', function()
+    exports['qb-menu']:closeMenu()
+    -- Reopen the vehicle menu
+    if insideShop and ClosestVehicle then
+        OpenVehicleNUI(getCurrentVehicleData())
     end
 end)
 

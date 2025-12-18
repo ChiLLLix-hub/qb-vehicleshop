@@ -158,13 +158,8 @@ RegisterNetEvent('qb-vehicleshop:server:swapVehicle', function(data)
         TriggerClientEvent('qb-vehicleshop:client:swapVehicle', src, data)
     end
     
-    Wait(1500)                                                -- let new car spawn
-    -- Reopen the vehicle list menu instead of home menu for better UX
-    TriggerClientEvent('qb-vehicleshop:client:openVehCats', src, {
-        catName = data.catName,
-        make = data.make,
-        onecat = data.onecat
-    })
+    -- Don't automatically reopen the menu - let the client handle it
+    -- This prevents the menu from reopening when player tries to close it
 end)
 
 -- Send customer for test drive
