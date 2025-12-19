@@ -33,10 +33,10 @@ const VehicleControls = () => {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: 20 }}
-      className="fixed bottom-8 left-1/2 transform -translate-x-1/2 pointer-events-auto"
+      className="fixed bottom-8 left-1/2 transform -translate-x-1/2 pointer-events-auto z-[100]"
       onClick={(e) => e.stopPropagation()}
     >
-      <div className="glass-dark rounded-2xl p-4">
+      <div className="glass-dark rounded-2xl p-4" onClick={(e) => e.stopPropagation()}>
         {/* Color Picker - Always Visible */}
         <div className="w-80">
           <div className="flex items-center justify-center mb-3">
@@ -52,11 +52,14 @@ const VehicleControls = () => {
             {colors.map((color) => (
               <button
                 key={color.value}
-                onClick={() => handleColorSelect(color.value)}
-                className={`w-10 h-10 rounded-lg border-2 transition-all ${
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleColorSelect(color.value);
+                }}
+                className={`w-10 h-10 rounded-lg border-2 transition-all duration-200 cursor-pointer ${
                   selectedPrimaryColor === color.value
-                    ? 'border-primary-400 scale-110'
-                    : 'border-gray-600 hover:border-gray-400'
+                    ? 'border-primary-400 scale-110 shadow-lg'
+                    : 'border-gray-600 hover:border-primary-300 hover:scale-105 hover:shadow-md'
                 }`}
                 style={{
                   backgroundColor: getColorHex(color.value)
