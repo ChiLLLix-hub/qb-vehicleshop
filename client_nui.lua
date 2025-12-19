@@ -121,10 +121,8 @@ function CloseNUI()
     if not nuiOpen then return end
     nuiOpen = false
     
-    -- Reset showroom vehicle to default before stopping preview mode
-    if insideShop and ClosestVehicle then
-        ResetShowroomVehicle(insideShop, ClosestVehicle)
-    end
+    -- Don't reset showroom vehicle - keep last swapped vehicle
+    -- Removed: ResetShowroomVehicle(insideShop, ClosestVehicle)
     
     StopPreviewMode()  -- Stop preview mode and restore player visibility
     SetNuiFocus(false, false)
@@ -249,6 +247,8 @@ RegisterNUICallback('rotateVehicle', function(data, cb)
 end)
 
 RegisterNUICallback('setVehicleColor', function(data, cb)
-    -- No-op: color slider removed per user request
+    if data.colorIndex and data.colorType then
+        SetPreviewVehicleColor(data.colorIndex, data.colorType)
+    end
     cb('ok')
 end)
