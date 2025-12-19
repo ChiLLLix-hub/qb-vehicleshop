@@ -192,7 +192,7 @@ function App() {
         )}
 
         {/* Vehicle Controls (Color Picker) */}
-        {(currentView === 'vehicle' || currentView === 'vehicles' || currentView === 'actions') && (
+        {currentView === 'actions' && (
           <VehicleControls />
         )}
 
