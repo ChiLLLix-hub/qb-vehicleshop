@@ -34,6 +34,7 @@ const VehicleControls = () => {
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: 20 }}
       className="fixed bottom-8 left-1/2 transform -translate-x-1/2 pointer-events-auto"
+      onClick={(e) => e.stopPropagation()}
     >
       <div className="glass-dark rounded-2xl p-4">
         {/* Color Picker - Always Visible */}

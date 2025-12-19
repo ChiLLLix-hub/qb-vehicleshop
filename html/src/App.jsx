@@ -7,6 +7,7 @@ import CategoryGrid from './components/CategoryGrid';
 import VehicleGrid from './components/VehicleGrid';
 import ActionsMenu from './components/ActionsMenu';
 import FinanceModal from './components/FinanceModal';
+import ConfirmationModal from './components/ConfirmationModal';
 import TestDriveOverlay from './components/TestDriveOverlay';
 import VehicleControls from './components/VehicleControls';
 import './index.css';
@@ -21,6 +22,9 @@ function App() {
   const [config, setConfig] = useState({});
   const [testDriveActive, setTestDriveActive] = useState(false);
   const [testDriveTime, setTestDriveTime] = useState('0:00');
+  const [showConfirmation, setShowConfirmation] = useState(false);
+  const [confirmationType, setConfirmationType] = useState(null);
+  const [confirmationData, setConfirmationData] = useState(null);
 
   const visible = useVisibility();
 
@@ -91,9 +95,10 @@ function App() {
 
   const handleBuy = useCallback(() => {
     const vehicle = selectedVehicle || currentVehicle;
-    fetchNui('buyVehicle', { vehicle });
-    handleClose();
-  }, [currentVehicle, selectedVehicle, handleClose]);
+    setConfirmationType('buy');
+    setConfirmationData({ vehicle });
+    setShowConfirmation(true);
+  }, [currentVehicle, selectedVehicle]);
 
   const handleFinance = useCallback(() => {
     if (selectedVehicle) {
@@ -122,12 +127,36 @@ function App() {
   }, []);
 
   const handleFinanceSubmit = useCallback((financeData) => {
-    fetchNui('financeVehicle', { 
+    setConfirmationType('finance');
+    setConfirmationData({ 
       vehicle: currentVehicle,
-      ...financeData 
+      downPayment: financeData.downPayment,
+      paymentAmount: financeData.paymentAmount
     });
-    handleClose();
-  }, [currentVehicle, handleClose]);
+    setShowConfirmation(true);
+  }, [currentVehicle]);
+
+  const handleConfirmPurchase = useCallback(() => {
+    if (confirmationType === 'buy') {
+      fetchNui('buyVehicle', { vehicle: confirmationData.vehicle });
+      setShowConfirmation(false);
+      handleClose();
+    } else if (confirmationType === 'finance') {
+      fetchNui('financeVehicle', { 
+        vehicle: confirmationData.vehicle,
+        downPayment: confirmationData.downPayment,
+        paymentAmount: confirmationData.paymentAmount
+      });
+      setShowConfirmation(false);
+      handleClose();
+    }
+  }, [confirmationType, confirmationData, handleClose]);
+
+  const handleCancelPurchase = useCallback(() => {
+    setShowConfirmation(false);
+    setConfirmationType(null);
+    setConfirmationData(null);
+  }, []);
 
   const handleReturnTestDrive = useCallback(() => {
     fetchNui('returnTestDrive');
@@ -215,6 +244,18 @@ function App() {
               onBack={() => setCurrentView(previousView || 'vehicle')}
             />
           </div>
+        )}
+
+        {/* Confirmation Modal */}
+        {showConfirmation && confirmationData && (
+          <ConfirmationModal
+            type={confirmationType}
+            vehicle={confirmationData.vehicle}
+            downPayment={confirmationData.downPayment}
+            paymentAmount={confirmationData.paymentAmount}
+            onConfirm={handleConfirmPurchase}
+            onCancel={handleCancelPurchase}
+          />
         )}
       </AnimatePresence>
     </div>
