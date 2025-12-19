@@ -248,7 +248,10 @@ end)
 
 RegisterNUICallback('setVehicleColor', function(data, cb)
     if data.colorIndex and data.colorType then
-        SetPreviewVehicleColor(data.colorIndex, data.colorType)
+        local colorIndex = tonumber(data.colorIndex)
+        if colorIndex and (data.colorType == 'primary' or data.colorType == 'secondary') then
+            SetPreviewVehicleColor(colorIndex, data.colorType)
+        end
     end
     cb('ok')
 end)
