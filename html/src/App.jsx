@@ -55,7 +55,10 @@ function App() {
   useNuiEvent('openVehicleList', (data) => {
     debugLog('Opening vehicle list', data);
     setVehicles(data.vehicles || []);
-    setCurrentView('vehicles');
+    // Only change view if not already in 'actions' - prevents closing ActionsMenu during refresh
+    if (currentView !== 'actions') {
+      setCurrentView('vehicles');
+    }
   });
 
   useNuiEvent('openFinanceMenu', (data) => {
@@ -159,8 +162,8 @@ function App() {
           </div>
         )}
 
-        {/* Vehicle Controls (Rotation & Color) */}
-        {currentView === 'vehicle' && currentVehicle && (
+        {/* Vehicle Controls (Color Picker) */}
+        {(currentView === 'vehicle' || currentView === 'vehicles' || currentView === 'actions') && (
           <VehicleControls />
         )}
 
