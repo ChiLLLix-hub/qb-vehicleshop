@@ -5,14 +5,16 @@ import { fetchNui, debugLog } from './utils/misc';
 import VehicleCard from './components/VehicleCard';
 import CategoryGrid from './components/CategoryGrid';
 import VehicleGrid from './components/VehicleGrid';
+import ActionsMenu from './components/ActionsMenu';
 import FinanceModal from './components/FinanceModal';
 import TestDriveOverlay from './components/TestDriveOverlay';
 import VehicleControls from './components/VehicleControls';
 import './index.css';
 
 function App() {
-  const [currentView, setCurrentView] = useState(null); // 'vehicle', 'categories', 'vehicles', 'finance'
+  const [currentView, setCurrentView] = useState(null); // 'vehicle', 'categories', 'vehicles', 'finance', 'actions'
   const [currentVehicle, setCurrentVehicle] = useState(null);
+  const [selectedVehicle, setSelectedVehicle] = useState(null); // Vehicle selected from grid
   const [categories, setCategories] = useState([]);
   const [vehicles, setVehicles] = useState([]);
   const [config, setConfig] = useState({});
@@ -80,18 +82,24 @@ function App() {
 
   // Handle actions
   const handleTestDrive = useCallback(() => {
-    fetchNui('testDrive', { vehicle: currentVehicle });
+    const vehicle = selectedVehicle || currentVehicle;
+    fetchNui('testDrive', { vehicle });
     setCurrentView(null);
-  }, [currentVehicle]);
+  }, [currentVehicle, selectedVehicle]);
 
   const handleBuy = useCallback(() => {
-    fetchNui('buyVehicle', { vehicle: currentVehicle });
+    const vehicle = selectedVehicle || currentVehicle;
+    fetchNui('buyVehicle', { vehicle });
     handleClose();
-  }, [currentVehicle, handleClose]);
+  }, [currentVehicle, selectedVehicle, handleClose]);
 
   const handleFinance = useCallback(() => {
+    // Use selected vehicle if available, otherwise use current vehicle
+    if (selectedVehicle) {
+      setCurrentVehicle(selectedVehicle);
+    }
     setCurrentView('finance');
-  }, []);
+  }, [selectedVehicle]);
 
   const handleSwap = useCallback(() => {
     fetchNui('swapVehicle', {});
@@ -104,8 +112,11 @@ function App() {
   }, []);
 
   const handleVehicleSelect = useCallback((vehicle) => {
+    // First, swap the vehicle on the server
     fetchNui('selectVehicle', { vehicle });
-    setCurrentView(null);
+    // Store selected vehicle and show actions menu
+    setSelectedVehicle(vehicle);
+    setCurrentView('actions');
   }, []);
 
   const handleFinanceSubmit = useCallback((financeData) => {
@@ -178,6 +189,19 @@ function App() {
           </div>
         )}
 
+        {/* Actions Menu (shown after vehicle selection) */}
+        {currentView === 'actions' && selectedVehicle && (
+          <div className="pointer-events-auto">
+            <ActionsMenu
+              vehicle={selectedVehicle}
+              onTestDrive={handleTestDrive}
+              onBuy={handleBuy}
+              onFinance={handleFinance}
+              onBack={() => setCurrentView('vehicles')}
+            />
+          </div>
+        )}
+
         {/* Finance Modal */}
         {currentView === 'finance' && currentVehicle && (
           <div className="pointer-events-auto">
@@ -186,7 +210,7 @@ function App() {
               config={config}
               onSubmit={handleFinanceSubmit}
               onClose={() => setCurrentView('vehicle')}
-              onBack={() => setCurrentView('vehicle')}
+              onBack={() => setCurrentView('actions')}
             />
           </div>
         )}
