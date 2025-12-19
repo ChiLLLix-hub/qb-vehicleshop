@@ -2,10 +2,8 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { fetchNui } from '../utils/misc';
 
-const VehicleControls = ({ enableRotation = true }) => {
-  const [rotation, setRotation] = useState(0);
+const VehicleControls = () => {
   const [selectedPrimaryColor, setSelectedPrimaryColor] = useState(0);
-  const [showColorPicker, setShowColorPicker] = useState(false);
 
   // Common vehicle colors using GTA V's standard color indices
   // These indices map to the game's built-in color palette
@@ -25,12 +23,6 @@ const VehicleControls = ({ enableRotation = true }) => {
     { name: 'Dark Green', value: 51 },
   ];
 
-  const handleRotationChange = (e) => {
-    const newRotation = parseFloat(e.target.value);
-    setRotation(newRotation);
-    fetchNui('rotateVehicle', { rotation: newRotation });
-  };
-
   const handleColorSelect = (colorValue) => {
     setSelectedPrimaryColor(colorValue);
     fetchNui('setVehicleColor', { colorIndex: colorValue, colorType: 'primary' });
@@ -41,68 +33,41 @@ const VehicleControls = ({ enableRotation = true }) => {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: 20 }}
-      className="fixed bottom-8 left-1/2 transform -translate-x-1/2 pointer-events-auto"
+      className="fixed bottom-8 left-1/2 transform -translate-x-1/2 pointer-events-auto z-[100]"
+      onClick={(e) => e.stopPropagation()}
     >
-      <div className="glass-dark rounded-2xl p-4 space-y-3">
-        {/* Rotation Slider */}
-        {enableRotation && (
-          <div className="w-80">
-            <div className="flex items-center justify-between mb-2">
-              <label className="text-white text-sm font-medium flex items-center gap-2">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                </svg>
-                Rotate Vehicle
-              </label>
-              <span className="text-gray-400 text-xs">{Math.round(rotation)}°</span>
-            </div>
-            <input
-              type="range"
-              min="0"
-              max="360"
-              value={rotation}
-              onChange={handleRotationChange}
-              className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-primary-500"
-            />
-          </div>
-        )}
-
-        {/* Color Picker */}
+      <div className="glass-dark rounded-2xl p-4" onClick={(e) => e.stopPropagation()}>
+        {/* Color Picker - Always Visible */}
         <div className="w-80">
-          <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center justify-center mb-3">
             <label className="text-white text-sm font-medium flex items-center gap-2">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
               </svg>
-              Color
+              Vehicle Color
             </label>
-            <button
-              onClick={() => setShowColorPicker(!showColorPicker)}
-              className="text-xs text-primary-400 hover:text-primary-300"
-            >
-              {showColorPicker ? 'Hide' : 'Show'} Colors
-            </button>
           </div>
           
-          {showColorPicker && (
-            <div className="grid grid-cols-6 gap-2">
-              {colors.map((color) => (
-                <button
-                  key={color.value}
-                  onClick={() => handleColorSelect(color.value)}
-                  className={`w-10 h-10 rounded-lg border-2 transition-all ${
-                    selectedPrimaryColor === color.value
-                      ? 'border-primary-400 scale-110'
-                      : 'border-gray-600 hover:border-gray-400'
-                  }`}
-                  style={{
-                    backgroundColor: getColorHex(color.value)
-                  }}
-                  title={color.name}
-                />
-              ))}
-            </div>
-          )}
+          <div className="grid grid-cols-6 gap-2">
+            {colors.map((color) => (
+              <button
+                key={color.value}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleColorSelect(color.value);
+                }}
+                className={`w-10 h-10 rounded-lg border-2 transition-all duration-200 cursor-pointer ${
+                  selectedPrimaryColor === color.value
+                    ? 'border-primary-400 scale-110 shadow-lg'
+                    : 'border-gray-600 hover:border-primary-300 hover:scale-105 hover:shadow-md'
+                }`}
+                style={{
+                  backgroundColor: getColorHex(color.value)
+                }}
+                title={color.name}
+              />
+            ))}
+          </div>
         </div>
       </div>
     </motion.div>

@@ -5,20 +5,26 @@ import { fetchNui, debugLog } from './utils/misc';
 import VehicleCard from './components/VehicleCard';
 import CategoryGrid from './components/CategoryGrid';
 import VehicleGrid from './components/VehicleGrid';
+import ActionsMenu from './components/ActionsMenu';
 import FinanceModal from './components/FinanceModal';
+import ConfirmationModal from './components/ConfirmationModal';
 import TestDriveOverlay from './components/TestDriveOverlay';
 import VehicleControls from './components/VehicleControls';
 import './index.css';
 
 function App() {
-  const [currentView, setCurrentView] = useState(null); // 'vehicle', 'categories', 'vehicles', 'finance'
+  const [currentView, setCurrentView] = useState(null); // 'vehicle', 'categories', 'vehicles', 'finance', 'actions'
   const [currentVehicle, setCurrentVehicle] = useState(null);
+  const [selectedVehicle, setSelectedVehicle] = useState(null); // Vehicle selected from grid
+  const [previousView, setPreviousView] = useState(null); // Track previous view for back navigation
   const [categories, setCategories] = useState([]);
   const [vehicles, setVehicles] = useState([]);
   const [config, setConfig] = useState({});
   const [testDriveActive, setTestDriveActive] = useState(false);
   const [testDriveTime, setTestDriveTime] = useState('0:00');
-  const [enableRotation, setEnableRotation] = useState(false);
+  const [showConfirmation, setShowConfirmation] = useState(false);
+  const [confirmationType, setConfirmationType] = useState(null);
+  const [confirmationData, setConfirmationData] = useState(null);
 
   const visible = useVisibility();
 
@@ -41,7 +47,6 @@ function App() {
     debugLog('Opening vehicle menu', data);
     setCurrentVehicle(data.vehicle);
     setConfig(data.config || {});
-    setEnableRotation(data.config?.enableRotation || false);
     setCurrentView('vehicle');
   });
 
@@ -54,7 +59,10 @@ function App() {
   useNuiEvent('openVehicleList', (data) => {
     debugLog('Opening vehicle list', data);
     setVehicles(data.vehicles || []);
-    setCurrentView('vehicles');
+    // Only change view if not already in 'actions' - prevents closing ActionsMenu during refresh
+    if (currentView !== 'actions') {
+      setCurrentView('vehicles');
+    }
   });
 
   useNuiEvent('openFinanceMenu', (data) => {
@@ -80,18 +88,25 @@ function App() {
 
   // Handle actions
   const handleTestDrive = useCallback(() => {
-    fetchNui('testDrive', { vehicle: currentVehicle });
+    const vehicle = selectedVehicle || currentVehicle;
+    fetchNui('testDrive', { vehicle });
     setCurrentView(null);
-  }, [currentVehicle]);
+  }, [currentVehicle, selectedVehicle]);
 
   const handleBuy = useCallback(() => {
-    fetchNui('buyVehicle', { vehicle: currentVehicle });
-    handleClose();
-  }, [currentVehicle, handleClose]);
+    const vehicle = selectedVehicle || currentVehicle;
+    setConfirmationType('buy');
+    setConfirmationData({ vehicle });
+    setShowConfirmation(true);
+  }, [currentVehicle, selectedVehicle]);
 
   const handleFinance = useCallback(() => {
+    if (selectedVehicle) {
+      setCurrentVehicle(selectedVehicle);
+    }
+    setPreviousView(currentView);
     setCurrentView('finance');
-  }, []);
+  }, [selectedVehicle, currentView]);
 
   const handleSwap = useCallback(() => {
     fetchNui('swapVehicle', {});
@@ -104,17 +119,44 @@ function App() {
   }, []);
 
   const handleVehicleSelect = useCallback((vehicle) => {
+    // First, swap the vehicle on the server
     fetchNui('selectVehicle', { vehicle });
-    setCurrentView(null);
+    // Store selected vehicle and show actions menu
+    setSelectedVehicle(vehicle);
+    setCurrentView('actions');
   }, []);
 
   const handleFinanceSubmit = useCallback((financeData) => {
-    fetchNui('financeVehicle', { 
+    setConfirmationType('finance');
+    setConfirmationData({ 
       vehicle: currentVehicle,
-      ...financeData 
+      downPayment: financeData.downPayment,
+      paymentAmount: financeData.paymentAmount
     });
-    handleClose();
-  }, [currentVehicle, handleClose]);
+    setShowConfirmation(true);
+  }, [currentVehicle]);
+
+  const handleConfirmPurchase = useCallback(() => {
+    if (confirmationType === 'buy') {
+      fetchNui('buyVehicle', { vehicle: confirmationData.vehicle });
+      setShowConfirmation(false);
+      handleClose();
+    } else if (confirmationType === 'finance') {
+      fetchNui('financeVehicle', { 
+        vehicle: confirmationData.vehicle,
+        downPayment: confirmationData.downPayment,
+        paymentAmount: confirmationData.paymentAmount
+      });
+      setShowConfirmation(false);
+      handleClose();
+    }
+  }, [confirmationType, confirmationData, handleClose]);
+
+  const handleCancelPurchase = useCallback(() => {
+    setShowConfirmation(false);
+    setConfirmationType(null);
+    setConfirmationData(null);
+  }, []);
 
   const handleReturnTestDrive = useCallback(() => {
     fetchNui('returnTestDrive');
@@ -149,9 +191,9 @@ function App() {
           </div>
         )}
 
-        {/* Vehicle Controls (Rotation & Color) */}
-        {currentView === 'vehicle' && currentVehicle && (
-          <VehicleControls enableRotation={enableRotation} />
+        {/* Vehicle Controls (Color Picker) */}
+        {currentView === 'actions' && (
+          <VehicleControls />
         )}
 
         {/* Category Grid */}
@@ -167,13 +209,26 @@ function App() {
         )}
 
         {/* Vehicle Grid */}
-        {currentView === 'vehicles' && (
+        {(currentView === 'vehicles' || currentView === 'actions') && (
           <div className="pointer-events-auto">
             <VehicleGrid
               vehicles={vehicles}
               onSelect={handleVehicleSelect}
               onClose={handleClose}
               onBack={() => setCurrentView('categories')}
+            />
+          </div>
+        )}
+
+        {/* Actions Menu (shown after vehicle selection) */}
+        {currentView === 'actions' && selectedVehicle && (
+          <div className="pointer-events-auto">
+            <ActionsMenu
+              vehicle={selectedVehicle}
+              onTestDrive={handleTestDrive}
+              onBuy={handleBuy}
+              onFinance={handleFinance}
+              onBack={() => setCurrentView('vehicles')}
             />
           </div>
         )}
@@ -186,9 +241,21 @@ function App() {
               config={config}
               onSubmit={handleFinanceSubmit}
               onClose={() => setCurrentView('vehicle')}
-              onBack={() => setCurrentView('vehicle')}
+              onBack={() => setCurrentView(previousView || 'vehicle')}
             />
           </div>
+        )}
+
+        {/* Confirmation Modal */}
+        {showConfirmation && confirmationData && (
+          <ConfirmationModal
+            type={confirmationType}
+            vehicle={confirmationData.vehicle}
+            downPayment={confirmationData.downPayment}
+            paymentAmount={confirmationData.paymentAmount}
+            onConfirm={handleConfirmPurchase}
+            onCancel={handleCancelPurchase}
+          />
         )}
       </AnimatePresence>
     </div>

@@ -121,10 +121,8 @@ function CloseNUI()
     if not nuiOpen then return end
     nuiOpen = false
     
-    -- Reset showroom vehicle to default before stopping preview mode
-    if insideShop and ClosestVehicle then
-        ResetShowroomVehicle(insideShop, ClosestVehicle)
-    end
+    -- Don't reset showroom vehicle - keep last swapped vehicle
+    -- Removed: ResetShowroomVehicle(insideShop, ClosestVehicle)
     
     StopPreviewMode()  -- Stop preview mode and restore player visibility
     SetNuiFocus(false, false)
@@ -172,71 +170,23 @@ end)
 
 RegisterNUICallback('buyVehicle', function(data, cb)
     if data.vehicle then
-        -- Show confirmation menu
-        local confirmMenu = {
-            {
-                header = 'Purchase Vehicle',
-                txt = 'Are you sure you want to buy ' .. data.vehicle.brand .. ' ' .. data.vehicle.name .. ' for $' .. data.vehicle.price .. '?',
-                params = {
-                    isMenuHeader = true
-                }
-            },
-            {
-                header = 'CONFIRM',
-                txt = 'Yes, purchase this vehicle',
-                params = {
-                    event = 'qb-vehicleshop:client:confirmBuy',
-                    args = {
-                        model = data.vehicle.model
-                    }
-                }
-            },
-            {
-                header = 'CANCEL',
-                txt = 'No, go back',
-                params = {
-                    event = 'qb-vehicleshop:client:cancelPurchase'
-                }
-            }
-        }
-        exports['qb-menu']:openMenu(confirmMenu)
+        -- Trigger buy event directly (confirmation already shown in NUI)
+        TriggerEvent('qb-vehicleshop:client:confirmBuy', {
+            model = data.vehicle.model
+        })
     end
     cb('ok')
 end)
 
 RegisterNUICallback('financeVehicle', function(data, cb)
     if data.vehicle then
-        -- Show confirmation menu
-        local confirmMenu = {
-            {
-                header = 'Finance Vehicle',
-                txt = 'Are you sure you want to finance ' .. data.vehicle.brand .. ' ' .. data.vehicle.name .. '?<br>Down Payment: $' .. data.downPayment .. '<br>Monthly Payments: ' .. data.paymentAmount,
-                params = {
-                    isMenuHeader = true
-                }
-            },
-            {
-                header = 'CONFIRM',
-                txt = 'Yes, finance this vehicle',
-                params = {
-                    event = 'qb-vehicleshop:client:confirmFinance',
-                    args = {
-                        model = data.vehicle.model,
-                        price = data.vehicle.price,
-                        downPayment = data.downPayment,
-                        paymentAmount = data.paymentAmount
-                    }
-                }
-            },
-            {
-                header = 'CANCEL',
-                txt = 'No, go back',
-                params = {
-                    event = 'qb-vehicleshop:client:cancelPurchase'
-                }
-            }
-        }
-        exports['qb-menu']:openMenu(confirmMenu)
+        -- Trigger finance event directly (confirmation already shown in NUI)
+        TriggerEvent('qb-vehicleshop:client:confirmFinance', {
+            model = data.vehicle.model,
+            price = data.vehicle.price,
+            downPayment = data.downPayment,
+            paymentAmount = data.paymentAmount
+        })
     end
     cb('ok')
 end)
@@ -297,6 +247,11 @@ RegisterNUICallback('rotateVehicle', function(data, cb)
 end)
 
 RegisterNUICallback('setVehicleColor', function(data, cb)
-    -- No-op: color slider removed per user request
+    if data.colorIndex and data.colorType then
+        local colorIndex = tonumber(data.colorIndex)
+        if colorIndex and (data.colorType == 'primary' or data.colorType == 'secondary') then
+            SetPreviewVehicleColor(colorIndex, data.colorType)
+        end
+    end
     cb('ok')
 end)
