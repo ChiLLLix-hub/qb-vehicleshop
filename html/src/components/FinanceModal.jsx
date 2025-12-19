@@ -120,21 +120,13 @@ const FinanceModal = ({ vehicle, onSubmit, onClose, onBack, config }) => {
           </div>
         </div>
 
-        {/* Action Buttons */}
-        <div className="flex gap-2">
-          <button
-            onClick={onClose}
-            className="flex-1 bg-gray-600 hover:bg-gray-700 text-white font-semibold py-2.5 px-4 rounded-lg transition-all duration-200 text-sm"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={handleSubmit}
-            className="flex-1 bg-green-600 hover:bg-green-700 text-white font-semibold py-2.5 px-4 rounded-lg transition-all duration-200 text-sm"
-          >
-            Finance
-          </button>
-        </div>
+        {/* Action Button */}
+        <button
+          onClick={handleSubmit}
+          className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-2.5 px-4 rounded-lg transition-all duration-200 text-sm"
+        >
+          Finance
+        </button>
       </div>
     </motion.div>
   );
