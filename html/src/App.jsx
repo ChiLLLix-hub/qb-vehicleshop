@@ -15,6 +15,7 @@ function App() {
   const [currentView, setCurrentView] = useState(null); // 'vehicle', 'categories', 'vehicles', 'finance', 'actions'
   const [currentVehicle, setCurrentVehicle] = useState(null);
   const [selectedVehicle, setSelectedVehicle] = useState(null); // Vehicle selected from grid
+  const [previousView, setPreviousView] = useState(null); // Track previous view for back navigation
   const [categories, setCategories] = useState([]);
   const [vehicles, setVehicles] = useState([]);
   const [config, setConfig] = useState({});
@@ -94,12 +95,12 @@ function App() {
   }, [currentVehicle, selectedVehicle, handleClose]);
 
   const handleFinance = useCallback(() => {
-    // Use selected vehicle if available, otherwise use current vehicle
     if (selectedVehicle) {
       setCurrentVehicle(selectedVehicle);
     }
+    setPreviousView(currentView);
     setCurrentView('finance');
-  }, [selectedVehicle]);
+  }, [selectedVehicle, currentView]);
 
   const handleSwap = useCallback(() => {
     fetchNui('swapVehicle', {});
@@ -210,7 +211,7 @@ function App() {
               config={config}
               onSubmit={handleFinanceSubmit}
               onClose={() => setCurrentView('vehicle')}
-              onBack={() => setCurrentView('actions')}
+              onBack={() => setCurrentView(previousView || 'vehicle')}
             />
           </div>
         )}
