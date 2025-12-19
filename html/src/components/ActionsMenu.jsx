@@ -8,14 +8,14 @@ const ActionsMenu = ({ vehicle, onTestDrive, onBuy, onFinance, onBack }) => {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 flex items-center justify-start z-50 pl-4"
-      onClick={onBack}
+      className="fixed inset-0 flex items-center justify-end z-50 pr-4 pointer-events-none"
     >
       <motion.div 
-        initial={{ opacity: 0, x: -20 }}
+        initial={{ opacity: 0, x: 100 }}
         animate={{ opacity: 1, x: 0 }}
-        exit={{ opacity: 0, x: -20 }}
-        className="glass-dark rounded-2xl p-5 w-full max-w-xs"
+        exit={{ opacity: 0, x: 100 }}
+        transition={{ type: "spring", stiffness: 300, damping: 30 }}
+        className="glass-dark rounded-2xl p-5 w-full max-w-xs pointer-events-auto"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Vehicle Header */}

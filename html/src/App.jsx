@@ -21,7 +21,6 @@ function App() {
   const [config, setConfig] = useState({});
   const [testDriveActive, setTestDriveActive] = useState(false);
   const [testDriveTime, setTestDriveTime] = useState('0:00');
-  const [enableRotation, setEnableRotation] = useState(false);
 
   const visible = useVisibility();
 
@@ -44,7 +43,6 @@ function App() {
     debugLog('Opening vehicle menu', data);
     setCurrentVehicle(data.vehicle);
     setConfig(data.config || {});
-    setEnableRotation(data.config?.enableRotation || false);
     setCurrentView('vehicle');
   });
 
@@ -163,7 +161,7 @@ function App() {
 
         {/* Vehicle Controls (Rotation & Color) */}
         {currentView === 'vehicle' && currentVehicle && (
-          <VehicleControls enableRotation={enableRotation} />
+          <VehicleControls />
         )}
 
         {/* Category Grid */}
@@ -179,7 +177,7 @@ function App() {
         )}
 
         {/* Vehicle Grid */}
-        {currentView === 'vehicles' && (
+        {(currentView === 'vehicles' || currentView === 'actions') && (
           <div className="pointer-events-auto">
             <VehicleGrid
               vehicles={vehicles}
